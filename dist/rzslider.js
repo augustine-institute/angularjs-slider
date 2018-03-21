@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-02-07 */
+ 2018-03-21 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -88,6 +88,8 @@
         ariaLabelledBy: null,
         ariaLabelHigh: null,
         ariaLabelledByHigh: null,
+        ariaLabelInd: null,
+        ariaLabelledByInd: null,
       }
       var globalOptions = {}
 
@@ -195,6 +197,8 @@
          */
         this.highValue = 0
 
+        this.indValue = 0;
+
         /**
          * Slider element wrapped in jqLite
          *
@@ -211,6 +215,16 @@
           this.scope.rzSliderModel !== undefined &&
           this.scope.rzSliderHigh !== undefined
 
+        /**
+         * Slider type
+         *
+         * @type {boolean} Set to true for indicator slider
+         */
+        this.indicator =
+          this.scope.rzSliderModel !== undefined &&
+          this.scope.rzSliderHigh !== undefined &&
+          this.scope.rzSliderIndicator !== undefined
+        
         /**
          * Values recorded when first dragging the bar
          *
@@ -336,10 +350,12 @@
         this.selBar = null // Highlight between two handles
         this.minH = null // Left slider handle
         this.maxH = null // Right slider handle
+        this.indH = null // Indicator slider handle
         this.flrLab = null // Floor label
         this.ceilLab = null // Ceiling label
         this.minLab = null // Label above the low value
         this.maxLab = null // Label above the high value
+        this.indLab = null // Label above the indicator value
         this.cmbLab = null // Combined label
         this.ticks = null // The ticks
 
@@ -357,6 +373,7 @@
         init: function() {
           var thrLow,
             thrHigh,
+            thrInd,
             self = this
 
           var calcDimFn = function() {
@@ -371,6 +388,7 @@
           this.setDisabledState()
           this.calcViewDimensions()
           this.setMinAndMax()
+          this.setInd()
           this.addAccessibility()
           this.updateCeilLab()
           this.updateFloorLab()
@@ -392,6 +410,10 @@
 
           thrHigh = rzThrottle(function() {
             self.onHighHandleChange()
+          }, self.options.interval)
+
+          thrInd = rzThrottle(function () {
+            self.onIndHandleChange()
           }, self.options.interval)
 
           this.scope.$on('rzSliderForceRender', function() {
@@ -429,6 +451,20 @@
             if (
               (self.range && newValue == null) ||
               (!self.range && newValue != null)
+            ) {
+              self.applyOptions()
+              self.resetSlider()
+            }
+          })
+
+          this.scope.$watch('rzSliderIndicator', function (newValue, oldValue) {
+            console.log("rzSliderIndicator $watch() newValue: ", newValue)
+            if (self.internalChange) return
+            if (newValue === oldValue) return
+            if (newValue != null) thrInd()
+            if (
+              (self.indicator && newValue == null) ||
+              (!self.indicator && newValue != null)
             ) {
               self.applyOptions()
               self.resetSlider()
@@ -484,6 +520,15 @@
           } else this.highValue = this.scope.rzSliderHigh
         },
 
+        syncIndValue: function() {
+          console.log("syncIndValue() this.scope.rzSliderIndicator: ", this.scope.rzSliderIndicator);
+          if (this.options.stepsArray) {
+            if (!this.options.bindIndexForStepsArray)
+              this.indValue = this.findStepIndex(this.scope.rzSliderIndicator)
+            else this.indValue = this.scope.rzSliderIndicator
+          } else this.indValue = this.scope.rzSliderIndicator
+        },
+
         getStepValue: function(sliderValue) {
           var step = this.options.stepsArray[sliderValue]
           if (angular.isDate(step)) return step
@@ -514,6 +559,7 @@
           this.syncLowValue()
           if (this.range) this.syncHighValue()
           this.setMinAndMax()
+          if (this.indicator) this.setInd()
           this.updateLowHandle(this.valueToPosition(this.lowValue))
           this.updateSelectionBar()
           this.updateTicksScale()
@@ -530,8 +576,23 @@
           this.syncLowValue()
           this.syncHighValue()
           this.setMinAndMax()
+          if (this.indicator) this.setInd()
           this.updateHighHandle(this.valueToPosition(this.highValue))
           this.updateSelectionBar()
+          this.updateTicksScale()
+          this.updateCmbLabel()
+          this.updateAriaAttributes()
+        },
+
+        onIndHandleChange: function(){
+          console.log("OnIndHandleChange() this.indValue: ", this.indValue)
+          this.syncLowValue()
+          this.syncHighValue()
+          this.syncIndValue()
+          this.setMinAndMax()
+          if (this.indicator) this.setInd()
+          this.updateIndHandle(this.valueToPosition(this.indValue))
+          // this.updateIndSelectionBar()
           this.updateTicksScale()
           this.updateCmbLabel()
           this.updateAriaAttributes()
@@ -629,6 +690,7 @@
           this.manageElementsStyle()
           this.addAccessibility()
           this.setMinAndMax()
+          this.setInd()
           this.updateCeilLab()
           this.updateFloorLab()
           this.unbindEvents()
@@ -699,6 +761,12 @@
                 case 11:
                   this.ticks = jElem
                   break
+                case 12:
+                  this.indH = jElem
+                  break
+                case 13:
+                  this.indLab = jElem
+                  break
               }
             },
             this
@@ -708,6 +776,7 @@
           this.selBar.rzsp = 0
           this.minH.rzsp = 0
           this.maxH.rzsp = 0
+          this.indH.rzsp = 0
           this.flrLab.rzsp = 0
           this.ceilLab.rzsp = 0
           this.minLab.rzsp = 0
@@ -819,6 +888,7 @@
          * @returns {undefined}
          */
         initHandles: function() {
+          console.log("initHandles() lowValue: ", this.lowValue)
           this.updateLowHandle(this.valueToPosition(this.lowValue))
 
           /*
@@ -829,6 +899,10 @@
             this.updateHighHandle(this.valueToPosition(this.highValue))
           this.updateSelectionBar()
           if (this.range) this.updateCmbLabel()
+
+          if (this.indicator)
+          console.log("initHandles() this.indValue: ", this.indValue)
+            this.updateIndHandle(this.valueToPosition(this.indValue))
 
           this.updateTicksScale()
         },
@@ -875,6 +949,10 @@
           if (getDimension) {
             this.getDimension(label)
           }
+        },
+
+        setInd: function() {
+          // fill in this method if necessary
         },
 
         /**
@@ -949,6 +1027,22 @@
               this.maxH.attr('aria-label', this.options.ariaLabelHigh)
             else if (this.options.ariaLabelledByHigh)
               this.maxH.attr('aria-labelledby', this.options.ariaLabelledByHigh)
+          }
+
+          if (this.indicator) {
+            this.indH.attr('role', 'slider')
+            if (
+              this.options.keyboardSupport &&
+              !(this.options.readOnly || this.options.disabled)
+            )
+              this.indH.attr('tabindex', '0')
+            else this.indH.attr('tabindex', '')
+            if (this.options.vertical)
+              this.indH.attr('aria-orientation', 'vertical')
+            if (this.options.ariaLabelInd)
+              this.indH.attr('aria-label', this.options.ariaLabelInd)
+            else if (this.options.ariaLabelledByHigh)
+              this.indH.attr('aria-labelledby', this.options.ariaLabelledByInd)
           }
         },
 
@@ -1230,6 +1324,26 @@
           }
         },
 
+        updateIndHandle: function (newPos) {
+          console.log("updateIndHandle() newPos: ", newPos)
+          this.setPosition(this.indH, newPos)
+          this.translateFn(this.indValue, this.indLab, 'ind')
+          this.setPosition(
+            this.indLab,
+            this.getHandleLabelPos('indLab', newPos)
+          )
+
+          if (this.options.getPointerColor) {
+            var pointercolor = this.getPointerColor('ind')
+            this.scope.indPointerStyle = {
+              backgroundColor: pointercolor,
+            }
+          }
+          if (this.options.autoHideLimitLabels) {
+            this.shFloorCeil()
+          }
+        },
+
         /**
          * Show/hide floor/ceiling label
          *
@@ -1311,6 +1425,7 @@
          * @returns {undefined}
          */
         updateSelectionBar: function() {
+          console.log("UPDATING SELECTION BAR")
           var position = 0,
             dimension = 0,
             isSelectionBarFromRight = this.options.rightToLeft
@@ -1769,8 +1884,11 @@
           }
           var position = this.getEventPosition(event),
             distanceMin = Math.abs(position - this.minH.rzsp),
-            distanceMax = Math.abs(position - this.maxH.rzsp)
-          if (distanceMin < distanceMax) return this.minH
+            distanceMax = Math.abs(position - this.maxH.rzsp),
+            distanceInd = Math.abs(position - this.indH.rzsp)
+
+          if(distanceInd < 5) return this.indH
+          else if (distanceMin < distanceMax) return this.minH
           else if (distanceMin > distanceMax) return this.maxH
           else if (!this.options.rightToLeft)
             //if event is at the same distance from min/max then if it's at left of minH, we return minH else maxH
@@ -1839,6 +1957,12 @@
                 angular.bind(this, this.onStart, this.maxH, 'highValue')
               )
             }
+            if (this.indicator) {
+              this.indH.on(
+                'mousedown',
+                angular.bind(this, this.onStart, this.indH, 'indicatorValue')
+              )
+            }
             if (!this.options.onlyBindHandles) {
               this.fullBar.on(
                 'mousedown',
@@ -1889,6 +2013,12 @@
                 angular.bind(this, this.onStart, this.maxH, 'highValue')
               )
             }
+            if (this.indicator) {
+              this.indH.on(
+                'touchstart',
+                angular.bind(this, this.onStart, this.indH, 'indicatorValue')
+              )
+            }
             if (!this.options.onlyBindHandles) {
               this.fullBar.on(
                 'touchstart',
@@ -1920,6 +2050,13 @@
                 angular.bind(this, this.onPointerFocus, this.maxH, 'highValue')
               )
             }
+            if (this.indicator) {
+              this.indH.on(
+                'focus',
+                angular.bind(this, this.onPointerFocus, this.indH, 'indicatorValue')
+              )
+            }
+            
           }
         },
 
@@ -1931,6 +2068,7 @@
         unbindEvents: function() {
           this.minH.off()
           this.maxH.off()
+          this.indH.off()
           this.fullBar.off()
           this.selBar.off()
           this.ticks.off()
@@ -1945,6 +2083,7 @@
          * @returns {undefined}
          */
         onStart: function(pointer, ref, event) {
+          console.log("onStart() pointer: ", pointer)
           var ehMove,
             ehEnd,
             eventNames = this.getEventNames(event)
@@ -1998,6 +2137,7 @@
          * @returns {undefined}
          */
         onMove: function(pointer, event, fromTick) {
+          console.log("onMove() pointer: ", pointer)
           var changedTouches = this.getEventAttr(event, 'changedTouches')
           var touchForThisSlider
           if (changedTouches) {
@@ -2054,6 +2194,7 @@
           if (!this.options.keyboardSupport) {
             this.minH.removeClass('rz-active')
             this.maxH.removeClass('rz-active')
+            this.indH.removeClass('rz-active')
             this.tracking = ''
           }
           this.dragging.active = false
@@ -2206,6 +2347,7 @@
          * @returns {undefined}
          */
         onDragStart: function(pointer, ref, event) {
+          console.log("onDragStart() pointer: ", pointer)
           var position = this.getEventPosition(event)
           this.dragging = {
             active: true,
@@ -2366,6 +2508,7 @@
          * @param {number} newValue new model value
          */
         positionTrackingHandle: function(newValue) {
+          console.log("positionTrackingHandle() newValue: ", newValue)
           var valueChanged = false
           newValue = this.applyMinMaxLimit(newValue)
           if (this.range) {
@@ -2594,6 +2737,7 @@
         scope: {
           rzSliderModel: '=?',
           rzSliderHigh: '=?',
+          rzSliderIndicator: '=?',
           rzSliderOptions: '&?',
           rzSliderTplUrl: '@',
         },
@@ -2653,7 +2797,7 @@
   'use strict';
 
   $templateCache.put('rzSliderTpl.html',
-    "<div class=rzslider><span class=\"rz-bar-wrapper rz-left-out-selection\"><span class=rz-bar></span></span> <span class=\"rz-bar-wrapper rz-right-out-selection\"><span class=rz-bar></span></span> <span class=rz-bar-wrapper><span class=rz-bar></span></span> <span class=rz-bar-wrapper><span class=\"rz-bar rz-selection\" ng-style=barStyle></span></span> <span class=\"rz-pointer rz-pointer-min\" ng-style=minPointerStyle></span> <span class=\"rz-pointer rz-pointer-max\" ng-style=maxPointerStyle></span> <span class=\"rz-bubble rz-limit rz-floor\"></span> <span class=\"rz-bubble rz-limit rz-ceil\"></span> <span class=\"rz-bubble rz-model-value\"></span> <span class=\"rz-bubble rz-model-high\"></span> <span class=rz-bubble></span><ul ng-show=showTicks class=rz-ticks><li ng-repeat=\"t in ticks track by $index\" class=rz-tick ng-class=\"{'rz-selected': t.selected}\" ng-style=t.style ng-attr-uib-tooltip=\"{{ t.tooltip }}\" ng-attr-tooltip-placement={{t.tooltipPlacement}} ng-attr-tooltip-append-to-body=\"{{ t.tooltip ? true : undefined}}\"><span ng-if=\"t.value != null\" class=rz-tick-value ng-attr-uib-tooltip=\"{{ t.valueTooltip }}\" ng-attr-tooltip-placement={{t.valueTooltipPlacement}}>{{ t.value }}</span> <span ng-if=\"t.legend != null\" class=rz-tick-legend>{{ t.legend }}</span></li></ul></div>"
+    "<div class=rzslider><span class=\"rz-bar-wrapper rz-left-out-selection\"><span class=rz-bar></span></span> <span class=\"rz-bar-wrapper rz-right-out-selection\"><span class=rz-bar></span></span> <span class=rz-bar-wrapper><span class=rz-bar></span></span> <span class=rz-bar-wrapper><span class=\"rz-bar rz-selection\" ng-style=barStyle></span></span> <span class=\"rz-pointer rz-pointer-min\" ng-style=minPointerStyle></span> <span class=\"rz-pointer rz-pointer-max\" ng-style=maxPointerStyle></span> <span class=\"rz-bubble rz-limit rz-floor\"></span> <span class=\"rz-bubble rz-limit rz-ceil\"></span> <span class=\"rz-bubble rz-model-value\"></span> <span class=\"rz-bubble rz-model-high\"></span> <span class=rz-bubble></span><ul ng-show=showTicks class=rz-ticks><li ng-repeat=\"t in ticks track by $index\" class=rz-tick ng-class=\"{'rz-selected': t.selected}\" ng-style=t.style ng-attr-uib-tooltip=\"{{ t.tooltip }}\" ng-attr-tooltip-placement={{t.tooltipPlacement}} ng-attr-tooltip-append-to-body=\"{{ t.tooltip ? true : undefined}}\"><span ng-if=\"t.value != null\" class=rz-tick-value ng-attr-uib-tooltip=\"{{ t.valueTooltip }}\" ng-attr-tooltip-placement={{t.valueTooltipPlacement}}>{{ t.value }}</span> <span ng-if=\"t.legend != null\" class=rz-tick-legend>{{ t.legend }}</span></li></ul><span class=\"rz-pointer rz-pointer-indicator\" ng-style=indicatorPointerStyle></span> <span class=\"rz-bubble rz-model-indicator\"></span></div>"
   );
 
 }]);
