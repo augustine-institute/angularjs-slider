@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-03-21 */
+ 2018-03-23 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -197,7 +197,7 @@
          */
         this.highValue = 0
 
-        this.indValue = 0;
+        this.indValue = 0
 
         /**
          * Slider element wrapped in jqLite
@@ -224,7 +224,7 @@
           this.scope.rzSliderModel !== undefined &&
           this.scope.rzSliderHigh !== undefined &&
           this.scope.rzSliderIndicator !== undefined
-        
+
         /**
          * Values recorded when first dragging the bar
          *
@@ -383,6 +383,7 @@
           this.applyOptions()
           this.syncLowValue()
           if (this.range) this.syncHighValue()
+          if (this.indicator) this.syncIndValue()
           this.initElemHandles()
           this.manageElementsStyle()
           this.setDisabledState()
@@ -412,7 +413,7 @@
             self.onHighHandleChange()
           }, self.options.interval)
 
-          thrInd = rzThrottle(function () {
+          thrInd = rzThrottle(function() {
             self.onIndHandleChange()
           }, self.options.interval)
 
@@ -457,8 +458,8 @@
             }
           })
 
-          this.scope.$watch('rzSliderIndicator', function (newValue, oldValue) {
-            console.log("rzSliderIndicator $watch() newValue: ", newValue)
+          this.scope.$watch('rzSliderIndicator', function(newValue, oldValue) {
+            console.log('rzSliderIndicator $watch() newValue: ', newValue)
             if (self.internalChange) return
             if (newValue === oldValue) return
             if (newValue != null) thrInd()
@@ -505,6 +506,7 @@
         },
 
         syncLowValue: function() {
+          console.log('syncLowValue() this.lowValue: ', this.lowValue)
           if (this.options.stepsArray) {
             if (!this.options.bindIndexForStepsArray)
               this.lowValue = this.findStepIndex(this.scope.rzSliderModel)
@@ -521,7 +523,10 @@
         },
 
         syncIndValue: function() {
-          console.log("syncIndValue() this.scope.rzSliderIndicator: ", this.scope.rzSliderIndicator);
+          console.log(
+            'syncIndValue() this.scope.rzSliderIndicator: ',
+            this.scope.rzSliderIndicator
+          )
           if (this.options.stepsArray) {
             if (!this.options.bindIndexForStepsArray)
               this.indValue = this.findStepIndex(this.scope.rzSliderIndicator)
@@ -537,6 +542,7 @@
         },
 
         applyLowValue: function() {
+          console.log("applyLowValue() this.lowValue: ", this.lowValue)
           if (this.options.stepsArray) {
             if (!this.options.bindIndexForStepsArray)
               this.scope.rzSliderModel = this.getStepValue(this.lowValue)
@@ -550,6 +556,15 @@
               this.scope.rzSliderHigh = this.getStepValue(this.highValue)
             else this.scope.rzSliderHigh = this.highValue
           } else this.scope.rzSliderHigh = this.highValue
+        },
+
+        applyIndValue: function () {
+          console.log("applyIndValue() this.indValue: ", this.indValue)
+          if (this.options.stepsArray) {
+            if (!this.options.bindIndexForStepsArray)
+              this.scope.rzSliderIndicator = this.getStepValue(this.indValue)
+            else this.scope.rzSliderIndicator = this.indValue
+          } else this.scope.rzSliderIndicator = this.indValue
         },
 
         /*
@@ -584,8 +599,8 @@
           this.updateAriaAttributes()
         },
 
-        onIndHandleChange: function(){
-          console.log("OnIndHandleChange() this.indValue: ", this.indValue)
+        onIndHandleChange: function() {
+          console.log('OnIndHandleChange() this.indValue: ', this.indValue)
           this.syncLowValue()
           this.syncHighValue()
           this.syncIndValue()
@@ -888,7 +903,7 @@
          * @returns {undefined}
          */
         initHandles: function() {
-          console.log("initHandles() lowValue: ", this.lowValue)
+          console.log('initHandles() lowValue: ', this.lowValue)
           this.updateLowHandle(this.valueToPosition(this.lowValue))
 
           /*
@@ -901,8 +916,8 @@
           if (this.range) this.updateCmbLabel()
 
           if (this.indicator)
-          console.log("initHandles() this.indValue: ", this.indValue)
-            this.updateIndHandle(this.valueToPosition(this.indValue))
+            console.log('initHandles() this.indValue: ', this.indValue)
+          this.updateIndHandle(this.valueToPosition(this.indValue))
 
           this.updateTicksScale()
         },
@@ -961,6 +976,7 @@
          * @returns {undefined}
          */
         setMinAndMax: function() {
+          console.log("setMinAndMax() this.lowValue: ", this.lowValue)
           this.step = +this.options.step
           this.precision = +this.options.precision
 
@@ -986,6 +1002,8 @@
 
           this.applyLowValue()
           if (this.range) this.applyHighValue()
+          console.log("setMinAndMax() this.indicator: ", this.indicator)
+          if (this.indicator) this.applyIndValue()
 
           this.valueRange = this.maxValue - this.minValue
         },
@@ -1241,7 +1259,8 @@
          */
         updateHandles: function(which, newPos) {
           if (which === 'lowValue') this.updateLowHandle(newPos)
-          else this.updateHighHandle(newPos)
+          else if(which === 'highValue') this.updateHighHandle(newPos)
+          else if(which === 'indicatorValue') this.updateIndHandle(newPos)
 
           this.updateSelectionBar()
           this.updateTicksScale()
@@ -1280,6 +1299,7 @@
          * @returns {undefined}
          */
         updateLowHandle: function(newPos) {
+          console.log("updateLowHandle() newPos: ", newPos)
           this.setPosition(this.minH, newPos)
           this.translateFn(this.lowValue, this.minLab, 'model')
           this.setPosition(
@@ -1324,8 +1344,8 @@
           }
         },
 
-        updateIndHandle: function (newPos) {
-          console.log("updateIndHandle() newPos: ", newPos)
+        updateIndHandle: function(newPos) {
+          console.log('updateIndHandle() newPos: ', newPos)
           this.setPosition(this.indH, newPos)
           this.translateFn(this.indValue, this.indLab, 'ind')
           this.setPosition(
@@ -1425,7 +1445,7 @@
          * @returns {undefined}
          */
         updateSelectionBar: function() {
-          console.log("UPDATING SELECTION BAR")
+          console.log('UPDATING SELECTION BAR')
           var position = 0,
             dimension = 0,
             isSelectionBarFromRight = this.options.rightToLeft
@@ -1887,7 +1907,7 @@
             distanceMax = Math.abs(position - this.maxH.rzsp),
             distanceInd = Math.abs(position - this.indH.rzsp)
 
-          if(distanceInd < 5) return this.indH
+          if (distanceInd < 5) return this.indH
           else if (distanceMin < distanceMax) return this.minH
           else if (distanceMin > distanceMax) return this.maxH
           else if (!this.options.rightToLeft)
@@ -2053,10 +2073,14 @@
             if (this.indicator) {
               this.indH.on(
                 'focus',
-                angular.bind(this, this.onPointerFocus, this.indH, 'indicatorValue')
+                angular.bind(
+                  this,
+                  this.onPointerFocus,
+                  this.indH,
+                  'indicatorValue'
+                )
               )
             }
-            
           }
         },
 
@@ -2083,7 +2107,7 @@
          * @returns {undefined}
          */
         onStart: function(pointer, ref, event) {
-          console.log("onStart() pointer: ", pointer)
+          console.log('onStart() pointer: ', pointer)
           var ehMove,
             ehEnd,
             eventNames = this.getEventNames(event)
@@ -2137,7 +2161,7 @@
          * @returns {undefined}
          */
         onMove: function(pointer, event, fromTick) {
-          console.log("onMove() pointer: ", pointer)
+          console.log('onMove() pointer: ', pointer)
           var changedTouches = this.getEventAttr(event, 'changedTouches')
           var touchForThisSlider
           if (changedTouches) {
@@ -2347,7 +2371,7 @@
          * @returns {undefined}
          */
         onDragStart: function(pointer, ref, event) {
-          console.log("onDragStart() pointer: ", pointer)
+          console.log('onDragStart() pointer: ', pointer)
           var position = this.getEventPosition(event)
           this.dragging = {
             active: true,
@@ -2478,6 +2502,7 @@
          * @param {number} newMaxValue   the new maximum value
          */
         positionTrackingBar: function(newMinValue, newMaxValue) {
+          console.log("positionTrackingBar()")
           if (
             this.options.minLimit != null &&
             newMinValue < this.options.minLimit
@@ -2497,6 +2522,7 @@
           this.highValue = newMaxValue
           this.applyLowValue()
           if (this.range) this.applyHighValue()
+          if (this.indicator) this.applyIndValue()
           this.applyModel(true)
           this.updateHandles('lowValue', this.valueToPosition(newMinValue))
           this.updateHandles('highValue', this.valueToPosition(newMaxValue))
@@ -2508,15 +2534,19 @@
          * @param {number} newValue new model value
          */
         positionTrackingHandle: function(newValue) {
-          console.log("positionTrackingHandle() newValue: ", newValue)
+          console.log('positionTrackingHandle() newValue: ', newValue)
+          console.log('positionTrackingHandle() this.tracking: ', this.tracking)
           var valueChanged = false
           newValue = this.applyMinMaxLimit(newValue)
+
           if (this.range) {
+
             if (this.options.pushRange) {
               newValue = this.applyPushRange(newValue)
               valueChanged = true
             } else {
               if (this.options.noSwitching) {
+
                 if (this.tracking === 'lowValue' && newValue > this.highValue)
                   newValue = this.applyMinMaxRange(this.highValue)
                 else if (
@@ -2525,6 +2555,8 @@
                 )
                   newValue = this.applyMinMaxRange(this.lowValue)
               }
+
+
               newValue = this.applyMinMaxRange(newValue)
               /* This is to check if we need to switch the min and max handles */
               if (this.tracking === 'lowValue' && newValue > this.highValue) {
@@ -2552,14 +2584,15 @@
                 this.minH.addClass('rz-active')
                 if (this.options.keyboardSupport) this.focusElement(this.minH)
                 valueChanged = true
-              }
+              } 
             }
           }
 
           if (this[this.tracking] !== newValue) {
             this[this.tracking] = newValue
             if (this.tracking === 'lowValue') this.applyLowValue()
-            else this.applyHighValue()
+            else if(this.tracking === 'highValue') this.applyHighValue()
+            else if(this.tracking === 'indicatorValue') this.applyIndValue()
             this.applyModel()
             this.updateHandles(this.tracking, this.valueToPosition(newValue))
             this.updateAriaAttributes()
@@ -2599,6 +2632,7 @@
         },
 
         applyPushRange: function(newValue) {
+          console.log("applyPushRange()")
           var difference =
               this.tracking === 'lowValue'
                 ? this.highValue - newValue
