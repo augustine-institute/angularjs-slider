@@ -92,6 +92,8 @@
         ariaLabelledBy: null,
         ariaLabelHigh: null,
         ariaLabelledByHigh: null,
+        ariaLabelInd: null,
+        ariaLabelledByInd: null,
       }
       var globalOptions = {}
 
@@ -199,6 +201,8 @@
          */
         this.highValue = 0
 
+        this.indicatorValue = 0
+
         /**
          * Slider element wrapped in jqLite
          *
@@ -214,6 +218,16 @@
         this.range =
           this.scope.rzSliderModel !== undefined &&
           this.scope.rzSliderHigh !== undefined
+
+        /**
+         * Slider type
+         *
+         * @type {boolean} Set to true for indicator slider
+         */
+        this.indicator =
+          this.scope.rzSliderModel !== undefined &&
+          this.scope.rzSliderHigh !== undefined &&
+          this.scope.rzSliderIndicator !== undefined
 
         /**
          * Values recorded when first dragging the bar
@@ -340,10 +354,12 @@
         this.selBar = null // Highlight between two handles
         this.minH = null // Left slider handle
         this.maxH = null // Right slider handle
+        this.indH = null // Indicator slider handle
         this.flrLab = null // Floor label
         this.ceilLab = null // Ceiling label
         this.minLab = null // Label above the low value
         this.maxLab = null // Label above the high value
+        this.indLab = null // Label above the indicator value
         this.cmbLab = null // Combined label
         this.ticks = null // The ticks
 
@@ -361,6 +377,7 @@
         init: function() {
           var thrLow,
             thrHigh,
+            thrInd,
             self = this
 
           var calcDimFn = function() {
@@ -370,11 +387,13 @@
           this.applyOptions()
           this.syncLowValue()
           if (this.range) this.syncHighValue()
+          if (this.indicator) this.syncIndValue()
           this.initElemHandles()
           this.manageElementsStyle()
           this.setDisabledState()
           this.calcViewDimensions()
           this.setMinAndMax()
+          this.setInd()
           this.addAccessibility()
           this.updateCeilLab()
           this.updateFloorLab()
@@ -397,6 +416,10 @@
           thrHigh = rzThrottle(function() {
             self.onHighHandleChange()
           }, self.options.interval)
+
+          thrInd = function() {
+            self.onIndHandleChange()
+          }
 
           this.scope.$on('rzSliderForceRender', function() {
             self.resetLabelsValue()
@@ -439,6 +462,23 @@
             }
           })
 
+          this.scope.$watch('rzSliderIndicator', function(newValue, oldValue) {
+            // console.log('rzSliderIndicator $watch() newValue: ', newValue)
+            if (self.internalChange) return
+            if (newValue === oldValue) return
+            if (newValue != null) {
+              // // console.log("rzSliderIndicator $watch() thrInd() called")
+              thrInd()
+            }
+            if (
+              (self.indicator && newValue == null) ||
+              (!self.indicator && newValue != null)
+            ) {
+              self.applyOptions()
+              self.resetSlider()
+            }
+          })
+
           this.scope.$on('$destroy', function() {
             self.unbindEvents()
             angular.element($window).off('resize', calcDimFn)
@@ -473,11 +513,16 @@
         },
 
         syncLowValue: function() {
+          // console.log('syncLowValue() this.lowValue: ', this.lowValue)
           if (this.options.stepsArray) {
-            if (!this.options.bindIndexForStepsArray)
+            if (!this.options.bindIndexForStepsArray) {
               this.lowValue = this.findStepIndex(this.scope.rzSliderModel)
-            else this.lowValue = this.scope.rzSliderModel
-          } else this.lowValue = this.scope.rzSliderModel
+            } else {
+              this.lowValue = this.scope.rzSliderModel
+            }
+          } else {
+            this.lowValue = this.scope.rzSliderModel
+          }
         },
 
         syncHighValue: function() {
@@ -488,6 +533,22 @@
           } else this.highValue = this.scope.rzSliderHigh
         },
 
+        syncIndValue: function() {
+          // console.log(
+          //   'syncIndValue() this.scope.rzSliderIndicator: ',
+          //   this.scope.rzSliderIndicator
+          // )
+          if (this.options.stepsArray) {
+            if (!this.options.bindIndexForStepsArray)
+              this.indicatorValue = this.findStepIndex(
+                this.scope.rzSliderIndicator
+              )
+            else this.indicatorValue = this.scope.rzSliderIndicator
+          } else this.indicatorValue = this.scope.rzSliderIndicator
+
+          // console.log('syncIndValue() this.indicatorValue: ', this.indicatorValue)
+        },
+
         getStepValue: function(sliderValue) {
           var step = this.options.stepsArray[sliderValue]
           if (angular.isDate(step)) return step
@@ -496,6 +557,7 @@
         },
 
         applyLowValue: function() {
+          // console.log('applyLowValue() this.lowValue: ', this.lowValue)
           if (this.options.stepsArray) {
             if (!this.options.bindIndexForStepsArray)
               this.scope.rzSliderModel = this.getStepValue(this.lowValue)
@@ -511,13 +573,26 @@
           } else this.scope.rzSliderHigh = this.highValue
         },
 
+        applyIndValue: function() {
+          // console.log('applyIndValue() this.indicatorValue: ', this.indicatorValue)
+          if (this.options.stepsArray) {
+            if (!this.options.bindIndexForStepsArray)
+              this.scope.rzSliderIndicator = this.getStepValue(
+                this.indicatorValue
+              )
+            else this.scope.rzSliderIndicator = this.indicatorValue
+          } else this.scope.rzSliderIndicator = this.indicatorValue
+        },
+
         /*
        * Reflow the slider when the low handle changes (called with throttle)
        */
         onLowHandleChange: function() {
+          // console.log("OnLowHandleChange() this.lowValue: ", this.lowValue)
           this.syncLowValue()
           if (this.range) this.syncHighValue()
           this.setMinAndMax()
+          if (this.indicator) this.setInd()
           this.updateLowHandle(this.valueToPosition(this.lowValue))
           this.updateSelectionBar()
           this.updateTicksScale()
@@ -534,8 +609,22 @@
           this.syncLowValue()
           this.syncHighValue()
           this.setMinAndMax()
+          if (this.indicator) this.setInd()
           this.updateHighHandle(this.valueToPosition(this.highValue))
           this.updateSelectionBar()
+          this.updateTicksScale()
+          this.updateCmbLabel()
+          this.updateAriaAttributes()
+        },
+
+        onIndHandleChange: function() {
+          this.syncLowValue()
+          this.syncHighValue()
+          this.syncIndValue()
+          this.setMinAndMax()
+          if (this.indicator) this.setInd()
+          this.updateIndHandle(this.valueToPosition(this.indicatorValue))
+          // this.updateIndSelectionBar()
           this.updateTicksScale()
           this.updateCmbLabel()
           this.updateAriaAttributes()
@@ -633,6 +722,7 @@
           this.manageElementsStyle()
           this.addAccessibility()
           this.setMinAndMax()
+          this.setInd()
           this.updateCeilLab()
           this.updateFloorLab()
           this.unbindEvents()
@@ -703,6 +793,12 @@
                 case 11:
                   this.ticks = jElem
                   break
+                case 12:
+                  this.indH = jElem
+                  break
+                case 13:
+                  this.indLab = jElem
+                  break
               }
             },
             this
@@ -712,6 +808,7 @@
           this.selBar.rzsp = 0
           this.minH.rzsp = 0
           this.maxH.rzsp = 0
+          this.indH.rzsp = 0
           this.flrLab.rzsp = 0
           this.ceilLab.rzsp = 0
           this.minLab.rzsp = 0
@@ -823,6 +920,7 @@
          * @returns {undefined}
          */
         initHandles: function() {
+          // console.log('initHandles() lowValue: ', this.lowValue)
           this.updateLowHandle(this.valueToPosition(this.lowValue))
 
           /*
@@ -833,6 +931,10 @@
             this.updateHighHandle(this.valueToPosition(this.highValue))
           this.updateSelectionBar()
           if (this.range) this.updateCmbLabel()
+
+          if (this.indicator)
+            // console.log('initHandles() this.indicatorValue: ', this.indicatorValue)
+            this.updateIndHandle(this.valueToPosition(this.indicatorValue))
 
           this.updateTicksScale()
         },
@@ -881,12 +983,17 @@
           }
         },
 
+        setInd: function() {
+          // fill in this method if necessary
+        },
+
         /**
          * Set maximum and minimum values for the slider and ensure the model and high
          * value match these limits
          * @returns {undefined}
          */
         setMinAndMax: function() {
+          // console.log('setMinAndMax() this.lowValue: ', this.lowValue)
           this.step = +this.options.step
           this.precision = +this.options.precision
 
@@ -909,9 +1016,9 @@
             this.lowValue = this.sanitizeValue(this.lowValue)
             if (this.range) this.highValue = this.sanitizeValue(this.highValue)
           }
-
           this.applyLowValue()
           if (this.range) this.applyHighValue()
+          if (this.indicator) this.applyIndValue()
 
           this.valueRange = this.maxValue - this.minValue
         },
@@ -953,6 +1060,22 @@
               this.maxH.attr('aria-label', this.options.ariaLabelHigh)
             else if (this.options.ariaLabelledByHigh)
               this.maxH.attr('aria-labelledby', this.options.ariaLabelledByHigh)
+          }
+
+          if (this.indicator) {
+            this.indH.attr('role', 'slider')
+            if (
+              this.options.keyboardSupport &&
+              !(this.options.readOnly || this.options.disabled)
+            )
+              this.indH.attr('tabindex', '0')
+            else this.indH.attr('tabindex', '')
+            if (this.options.vertical)
+              this.indH.attr('aria-orientation', 'vertical')
+            if (this.options.ariaLabelInd)
+              this.indH.attr('aria-label', this.options.ariaLabelInd)
+            else if (this.options.ariaLabelledByHigh)
+              this.indH.attr('aria-labelledby', this.options.ariaLabelledByInd)
           }
         },
 
@@ -1151,7 +1274,8 @@
          */
         updateHandles: function(which, newPos) {
           if (which === 'lowValue') this.updateLowHandle(newPos)
-          else this.updateHighHandle(newPos)
+          else if (which === 'highValue') this.updateHighHandle(newPos)
+          else if (which === 'indicatorValue') this.updateIndHandle(newPos)
 
           this.updateSelectionBar()
           this.updateTicksScale()
@@ -1190,6 +1314,7 @@
          * @returns {undefined}
          */
         updateLowHandle: function(newPos) {
+          // // console.log('updateLowHandle() newPos: ', newPos)
           this.setPosition(this.minH, newPos)
           this.translateFn(this.lowValue, this.minLab, 'model')
           this.setPosition(
@@ -1226,6 +1351,26 @@
           if (this.options.getPointerColor) {
             var pointercolor = this.getPointerColor('max')
             this.scope.maxPointerStyle = {
+              backgroundColor: pointercolor,
+            }
+          }
+          if (this.options.autoHideLimitLabels) {
+            this.shFloorCeil()
+          }
+        },
+
+        updateIndHandle: function(newPos) {
+          // // console.log('updateIndHandle() newPos: ', newPos)
+          this.setPosition(this.indH, newPos)
+          this.translateFn(this.indicatorValue, this.indLab, 'ind')
+          this.setPosition(
+            this.indLab,
+            this.getHandleLabelPos('indLab', newPos)
+          )
+
+          if (this.options.getPointerColor) {
+            var pointercolor = this.getPointerColor('ind')
+            this.scope.indPointerStyle = {
               backgroundColor: pointercolor,
             }
           }
@@ -1315,6 +1460,7 @@
          * @returns {undefined}
          */
         updateSelectionBar: function() {
+          // // console.log('UPDATING SELECTION BAR')
           var position = 0,
             dimension = 0,
             isSelectionBarFromRight = this.options.rightToLeft
@@ -1773,8 +1919,11 @@
           }
           var position = this.getEventPosition(event),
             distanceMin = Math.abs(position - this.minH.rzsp),
-            distanceMax = Math.abs(position - this.maxH.rzsp)
-          if (distanceMin < distanceMax) return this.minH
+            distanceMax = Math.abs(position - this.maxH.rzsp),
+            distanceInd = Math.abs(position - this.indH.rzsp)
+
+          if (distanceInd < 5) return this.indH
+          else if (distanceMin < distanceMax) return this.minH
           else if (distanceMin > distanceMax) return this.maxH
           else if (!this.options.rightToLeft)
             //if event is at the same distance from min/max then if it's at left of minH, we return minH else maxH
@@ -1843,6 +1992,12 @@
                 angular.bind(this, this.onStart, this.maxH, 'highValue')
               )
             }
+            if (this.indicator) {
+              this.indH.on(
+                'mousedown',
+                angular.bind(this, this.onStart, this.indH, 'indicatorValue')
+              )
+            }
             if (!this.options.onlyBindHandles) {
               this.fullBar.on(
                 'mousedown',
@@ -1893,6 +2048,12 @@
                 angular.bind(this, this.onStart, this.maxH, 'highValue')
               )
             }
+            if (this.indicator) {
+              this.indH.on(
+                'touchstart',
+                angular.bind(this, this.onStart, this.indH, 'indicatorValue')
+              )
+            }
             if (!this.options.onlyBindHandles) {
               this.fullBar.on(
                 'touchstart',
@@ -1924,6 +2085,17 @@
                 angular.bind(this, this.onPointerFocus, this.maxH, 'highValue')
               )
             }
+            if (this.indicator) {
+              this.indH.on(
+                'focus',
+                angular.bind(
+                  this,
+                  this.onPointerFocus,
+                  this.indH,
+                  'indicatorValue'
+                )
+              )
+            }
           }
         },
 
@@ -1935,6 +2107,7 @@
         unbindEvents: function() {
           this.minH.off()
           this.maxH.off()
+          this.indH.off()
           this.fullBar.off()
           this.selBar.off()
           this.ticks.off()
@@ -1949,6 +2122,7 @@
          * @returns {undefined}
          */
         onStart: function(pointer, ref, event) {
+          // console.log('onStart() pointer: ', pointer)
           var ehMove,
             ehEnd,
             eventNames = this.getEventNames(event)
@@ -2002,6 +2176,8 @@
          * @returns {undefined}
          */
         onMove: function(pointer, event, fromTick) {
+          // console.log("onMove() this.lowValue start: ", this.lowValue)
+          // console.log('onMove() pointer: ', pointer)
           var changedTouches = this.getEventAttr(event, 'changedTouches')
           var touchForThisSlider
           if (changedTouches) {
@@ -2058,6 +2234,7 @@
           if (!this.options.keyboardSupport) {
             this.minH.removeClass('rz-active')
             this.maxH.removeClass('rz-active')
+            this.indH.removeClass('rz-active')
             this.tracking = ''
           }
           this.dragging.active = false
@@ -2210,6 +2387,7 @@
          * @returns {undefined}
          */
         onDragStart: function(pointer, ref, event) {
+          // console.log('onDragStart() pointer: ', pointer)
           var position = this.getEventPosition(event)
           this.dragging = {
             active: true,
@@ -2340,6 +2518,7 @@
          * @param {number} newMaxValue   the new maximum value
          */
         positionTrackingBar: function(newMinValue, newMaxValue) {
+          // console.log('positionTrackingBar()')
           if (
             this.options.minLimit != null &&
             newMinValue < this.options.minLimit
@@ -2354,11 +2533,11 @@
             newMaxValue = this.options.maxLimit
             newMinValue = newMaxValue - this.dragging.difference
           }
-
           this.lowValue = newMinValue
           this.highValue = newMaxValue
           this.applyLowValue()
           if (this.range) this.applyHighValue()
+          if (this.indicator) this.applyIndValue()
           this.applyModel(true)
           this.updateHandles('lowValue', this.valueToPosition(newMinValue))
           this.updateHandles('highValue', this.valueToPosition(newMaxValue))
@@ -2372,19 +2551,21 @@
         positionTrackingHandle: function(newValue) {
           var valueChanged = false
           newValue = this.applyMinMaxLimit(newValue)
+
           if (this.range) {
             if (this.options.pushRange) {
               newValue = this.applyPushRange(newValue)
               valueChanged = true
             } else {
               if (this.options.noSwitching) {
-                if (this.tracking === 'lowValue' && newValue > this.highValue)
+                if (this.tracking === 'lowValue' && newValue > this.highValue) {
                   newValue = this.applyMinMaxRange(this.highValue)
-                else if (
+                } else if (
                   this.tracking === 'highValue' &&
                   newValue < this.lowValue
-                )
+                ) {
                   newValue = this.applyMinMaxRange(this.lowValue)
+                }
               }
               newValue = this.applyMinMaxRange(newValue)
               /* This is to check if we need to switch the min and max handles */
@@ -2420,7 +2601,8 @@
           if (this[this.tracking] !== newValue) {
             this[this.tracking] = newValue
             if (this.tracking === 'lowValue') this.applyLowValue()
-            else this.applyHighValue()
+            else if (this.tracking === 'highValue') this.applyHighValue()
+            else if (this.tracking === 'indicatorValue') this.applyIndValue()
             this.applyModel()
             this.updateHandles(this.tracking, this.valueToPosition(newValue))
             this.updateAriaAttributes()
@@ -2460,6 +2642,7 @@
         },
 
         applyPushRange: function(newValue) {
+          // console.log('applyPushRange()')
           var difference =
               this.tracking === 'lowValue'
                 ? this.highValue - newValue
@@ -2541,6 +2724,12 @@
               )
             })
           }
+
+          if (this.tracking === 'indicatorValue') {
+            this.scope.$emit('indicatorSlideStart')
+          } else {
+            this.scope.$emit('slideStarted')
+          }
         },
 
         /**
@@ -2583,7 +2772,15 @@
               )
             })
           }
-          this.scope.$emit('slideEnded')
+
+          // console.log("callOnEnd() rzSliderIndicator: ", this.scope.rzSliderIndicator);
+          // console.log("callOnEnd() this.indicatorValue: ", this.indicatorValue);
+
+          if (this.tracking === 'indicatorValue') {
+            this.scope.$emit('indicatorSlideEnded')
+          } else {
+            this.scope.$emit('slideEnded')
+          }
         },
       }
 
@@ -2598,6 +2795,7 @@
         scope: {
           rzSliderModel: '=?',
           rzSliderHigh: '=?',
+          rzSliderIndicator: '=?',
           rzSliderOptions: '&?',
           rzSliderTplUrl: '@',
         },
