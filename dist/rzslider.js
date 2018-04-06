@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-04-05 */
+ 2018-04-06 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -515,10 +515,10 @@
               this.lowValue = this.findStepIndex(this.scope.rzSliderModel)
             } else {
               this.lowValue = this.scope.rzSliderModel
-            } 
+            }
           } else {
             this.lowValue = this.scope.rzSliderModel
-          } 
+          }
         },
 
         syncHighValue: function() {
@@ -536,7 +536,9 @@
           // )
           if (this.options.stepsArray) {
             if (!this.options.bindIndexForStepsArray)
-              this.indicatorValue = this.findStepIndex(this.scope.rzSliderIndicator)
+              this.indicatorValue = this.findStepIndex(
+                this.scope.rzSliderIndicator
+              )
             else this.indicatorValue = this.scope.rzSliderIndicator
           } else this.indicatorValue = this.scope.rzSliderIndicator
 
@@ -571,7 +573,9 @@
           // console.log('applyIndValue() this.indicatorValue: ', this.indicatorValue)
           if (this.options.stepsArray) {
             if (!this.options.bindIndexForStepsArray)
-              this.scope.rzSliderIndicator = this.getStepValue(this.indicatorValue)
+              this.scope.rzSliderIndicator = this.getStepValue(
+                this.indicatorValue
+              )
             else this.scope.rzSliderIndicator = this.indicatorValue
           } else this.scope.rzSliderIndicator = this.indicatorValue
         },
@@ -912,7 +916,6 @@
          * @returns {undefined}
          */
         initHandles: function() {
-          // console.log('initHandles() lowValue: ', this.lowValue)
           this.updateLowHandle(this.valueToPosition(this.lowValue))
 
           /*
@@ -926,7 +929,7 @@
 
           if (this.indicator)
             // console.log('initHandles() this.indicatorValue: ', this.indicatorValue)
-          this.updateIndHandle(this.valueToPosition(this.indicatorValue))
+            this.updateIndHandle(this.valueToPosition(this.indicatorValue))
 
           this.updateTicksScale()
         },
@@ -985,7 +988,7 @@
          * @returns {undefined}
          */
         setMinAndMax: function() {
-          // console.log('setMinAndMax() this.lowValue: ', this.lowValue)
+          // console.log('setMinAndMax() this.step: ', this.options.step)
           this.step = +this.options.step
           this.precision = +this.options.precision
 
@@ -2168,7 +2171,7 @@
          * @returns {undefined}
          */
         onMove: function(pointer, event, fromTick) {
-          console.log("onMove() this.lowValue start: ", this.lowValue)
+          // console.log("onMove() this.lowValue start: ", this.lowValue)
           // console.log('onMove() pointer: ', pointer)
           var changedTouches = this.getEventAttr(event, 'changedTouches')
           var touchForThisSlider
@@ -2543,7 +2546,7 @@
         positionTrackingHandle: function(newValue) {
           var valueChanged = false
           newValue = this.applyMinMaxLimit(newValue)
-          
+
           if (this.range) {
             if (this.options.pushRange) {
               newValue = this.applyPushRange(newValue)
@@ -2558,7 +2561,6 @@
                 ) {
                   newValue = this.applyMinMaxRange(this.lowValue)
                 }
-                  
               }
               newValue = this.applyMinMaxRange(newValue)
               /* This is to check if we need to switch the min and max handles */
@@ -2655,7 +2657,7 @@
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else {
+            } else if (this.tracking !== 'indicatorValue') {
               this.lowValue = Math.max(newValue - minRange, this.minValue)
               newValue = this.lowValue + minRange
               this.applyLowValue()
@@ -2674,7 +2676,7 @@
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else {
+            } else if (this.tracking !== 'indicatorValue') {
               this.lowValue = newValue - maxRange
               this.applyLowValue()
               this.updateHandles(
@@ -2719,11 +2721,10 @@
           }
 
           if (this.tracking === 'indicatorValue') {
-            this.scope.$emit('indicatorSlideStart');
+            this.scope.$emit('indicatorSlideStart')
           } else {
             this.scope.$emit('slideStarted')
           }
-
         },
 
         /**
@@ -2771,7 +2772,7 @@
           // console.log("callOnEnd() this.indicatorValue: ", this.indicatorValue);
 
           if (this.tracking === 'indicatorValue') {
-            this.scope.$emit('indicatorSlideEnded');
+            this.scope.$emit('indicatorSlideEnded')
           } else {
             this.scope.$emit('slideEnded')
           }

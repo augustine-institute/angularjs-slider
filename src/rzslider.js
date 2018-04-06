@@ -920,7 +920,6 @@
          * @returns {undefined}
          */
         initHandles: function() {
-          // console.log('initHandles() lowValue: ', this.lowValue)
           this.updateLowHandle(this.valueToPosition(this.lowValue))
 
           /*
@@ -993,7 +992,7 @@
          * @returns {undefined}
          */
         setMinAndMax: function() {
-          // console.log('setMinAndMax() this.lowValue: ', this.lowValue)
+          // console.log('setMinAndMax() this.step: ', this.options.step)
           this.step = +this.options.step
           this.precision = +this.options.precision
 
@@ -2662,7 +2661,7 @@
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else {
+            } else if (this.tracking !== 'indicatorValue') {
               this.lowValue = Math.max(newValue - minRange, this.minValue)
               newValue = this.lowValue + minRange
               this.applyLowValue()
@@ -2681,7 +2680,7 @@
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else {
+            } else if (this.tracking !== 'indicatorValue') {
               this.lowValue = newValue - maxRange
               this.applyLowValue()
               this.updateHandles(
