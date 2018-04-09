@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-04-06 */
+ 2018-04-09 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -1310,6 +1310,14 @@
          */
         updateLowHandle: function(newPos) {
           // // console.log('updateLowHandle() newPos: ', newPos)
+
+          // 'snap' low handle to indicator handle
+          if (this.tracking === 'lowValue' && Math.abs(newPos - this.indH.rzsp) < 25){
+            this.setPosition(this.minH, this.indH.rzsp)
+            return;
+          }
+
+
           this.setPosition(this.minH, newPos)
           this.translateFn(this.lowValue, this.minLab, 'model')
           this.setPosition(
@@ -1336,6 +1344,14 @@
          * @returns {undefined}
          */
         updateHighHandle: function(newPos) {
+
+          // 'snap' high handle to indicator handle
+          if (this.tracking === 'highValue' && Math.abs(newPos - this.indH.rzsp) < 25) {
+            this.setPosition(this.maxH, this.indH.rzsp)
+            return;
+          }
+
+
           this.setPosition(this.maxH, newPos)
           this.translateFn(this.highValue, this.maxLab, 'high')
           this.setPosition(
