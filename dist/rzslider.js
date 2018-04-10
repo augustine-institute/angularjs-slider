@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-04-09 */
+ 2018-04-10 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -1312,11 +1312,13 @@
           // // console.log('updateLowHandle() newPos: ', newPos)
 
           // 'snap' low handle to indicator handle
-          if (this.tracking === 'lowValue' && Math.abs(newPos - this.indH.rzsp) < 25){
+          if (
+            this.tracking === 'lowValue' &&
+            Math.abs(newPos - this.indH.rzsp) < 25
+          ) {
             this.setPosition(this.minH, this.indH.rzsp)
-            return;
+            return
           }
-
 
           this.setPosition(this.minH, newPos)
           this.translateFn(this.lowValue, this.minLab, 'model')
@@ -1344,13 +1346,14 @@
          * @returns {undefined}
          */
         updateHighHandle: function(newPos) {
-
           // 'snap' high handle to indicator handle
-          if (this.tracking === 'highValue' && Math.abs(newPos - this.indH.rzsp) < 25) {
+          if (
+            this.tracking === 'highValue' &&
+            Math.abs(newPos - this.indH.rzsp) < 25
+          ) {
             this.setPosition(this.maxH, this.indH.rzsp)
-            return;
+            return
           }
-
 
           this.setPosition(this.maxH, newPos)
           this.translateFn(this.highValue, this.maxLab, 'high')
@@ -2133,7 +2136,6 @@
          * @returns {undefined}
          */
         onStart: function(pointer, ref, event) {
-          // console.log('onStart() pointer: ', pointer)
           var ehMove,
             ehEnd,
             eventNames = this.getEventNames(event)
@@ -2263,7 +2265,7 @@
 
         onPointerFocus: function(pointer, ref) {
           this.tracking = ref
-          pointer.one('blur', angular.bind(this, this.onPointerBlur, pointer))
+          pointer.on('blur', angular.bind(this, this.onPointerBlur, pointer))
           pointer.on('keydown', angular.bind(this, this.onKeyboardEvent))
           pointer.on('keyup', angular.bind(this, this.onKeyUp))
           this.firstKeyDown = true

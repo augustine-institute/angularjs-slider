@@ -2140,7 +2140,6 @@
          * @returns {undefined}
          */
         onStart: function(pointer, ref, event) {
-          // console.log('onStart() pointer: ', pointer)
           var ehMove,
             ehEnd,
             eventNames = this.getEventNames(event)
@@ -2270,7 +2269,7 @@
 
         onPointerFocus: function(pointer, ref) {
           this.tracking = ref
-          pointer.one('blur', angular.bind(this, this.onPointerBlur, pointer))
+          pointer.on('blur', angular.bind(this, this.onPointerBlur, pointer))
           pointer.on('keydown', angular.bind(this, this.onKeyboardEvent))
           pointer.on('keyup', angular.bind(this, this.onKeyUp))
           this.firstKeyDown = true
