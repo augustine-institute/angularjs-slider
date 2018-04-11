@@ -366,6 +366,10 @@
         // used in onTouchStart to detect double taps
         this.tappedTwice = false
 
+        // used when snapping occurs to lock handle to position and not move accidentally
+        this.lockLowHandle = false
+        this.lockHighHandle = false
+
         // Initialize slider
         this.init()
       }
@@ -1943,8 +1947,16 @@
             distanceInd = Math.abs(position - this.indH.rzsp)
 
           if (distanceInd < 5) return this.indH
-          else if (distanceMin < distanceMax) return this.minH
-          else if (distanceMin > distanceMax) return this.maxH
+          else if (
+            (distanceMin < distanceMax && !this.lockLowHandle) ||
+            this.lockHighHandle
+          )
+            return this.minH
+          else if (
+            (distanceMin > distanceMax && !this.lockHighHandle) ||
+            this.lockLowHandle
+          )
+            return this.maxH
           else if (!this.options.rightToLeft)
             //if event is at the same distance from min/max then if it's at left of minH, we return minH else maxH
             return position < this.minH.rzsp ? this.minH : this.maxH
@@ -2167,6 +2179,12 @@
             this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
           }
 
+          if (this.tracking === 'lowValue') {
+            this.lockLowHandle = false
+          } else if (this.tracking === 'highValue') {
+            this.lockHighHandle = false
+          }
+
           pointer.addClass('rz-active')
 
           if (this.options.keyboardSupport) this.focusElement(pointer)
@@ -2295,9 +2313,11 @@
           if (ref === 'lowValue') {
             this.scope.rzSliderModel = this.scope.rzSliderIndicator
             this.onLowHandleChange()
+            this.lockLowHandle = true
           } else if (ref === 'highValue') {
             this.scope.rzSliderHigh = this.scope.rzSliderIndicator
             this.onHighHandleChange()
+            this.lockHighHandle = true
           } else {
             return
           }
@@ -2445,6 +2465,8 @@
          */
         onDragStart: function(pointer, ref, event) {
           // console.log('onDragStart() pointer: ', pointer)
+          this.lockLowHandle = false
+          this.lockHighHandle = false
           var position = this.getEventPosition(event)
           this.dragging = {
             active: true,
@@ -2712,6 +2734,9 @@
           // if smaller than minRange
           if (difference < minRange) {
             if (this.tracking === 'lowValue') {
+              if (this.lockHighHandle) {
+                return this.lowValue
+              }
               this.highValue = Math.min(newValue + minRange, this.maxValue)
               newValue = this.highValue - minRange
               this.applyHighValue()
@@ -2719,7 +2744,10 @@
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else if (this.tracking !== 'indicatorValue') {
+            } else if (this.tracking === 'highValue') {
+              if (this.lockLowHandle) {
+                return this.highValue
+              }
               this.lowValue = Math.max(newValue - minRange, this.minValue)
               newValue = this.lowValue + minRange
               this.applyLowValue()
@@ -2732,13 +2760,19 @@
           } else if (maxRange !== null && difference > maxRange) {
             // if greater than maxRange
             if (this.tracking === 'lowValue') {
+              if (this.lockHighHandle) {
+                return this.lowValue
+              }
               this.highValue = newValue + maxRange
               this.applyHighValue()
               this.updateHandles(
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else if (this.tracking !== 'indicatorValue') {
+            } else if (this.tracking === 'highValue') {
+              if (this.lockLowHandle) {
+                return this.highValue
+              }
               this.lowValue = newValue - maxRange
               this.applyLowValue()
               this.updateHandles(
