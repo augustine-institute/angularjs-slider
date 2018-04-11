@@ -363,6 +363,9 @@
         this.cmbLab = null // Combined label
         this.ticks = null // The ticks
 
+        // used in onTouchStart to detect double taps
+        this.tappedTwice = false
+
         // Initialize slider
         this.init()
       }
@@ -588,7 +591,6 @@
        * Reflow the slider when the low handle changes (called with throttle)
        */
         onLowHandleChange: function() {
-          // console.log("OnLowHandleChange() this.lowValue: ", this.lowValue)
           this.syncLowValue()
           if (this.range) this.syncHighValue()
           this.setMinAndMax()
@@ -1315,14 +1317,14 @@
         updateLowHandle: function(newPos) {
           // // console.log('updateLowHandle() newPos: ', newPos)
 
-          // 'snap' low handle to indicator handle
-          if (
-            this.tracking === 'lowValue' &&
-            Math.abs(newPos - this.indH.rzsp) < 25
-          ) {
-            this.setPosition(this.minH, this.indH.rzsp)
-            return
-          }
+          // // 'snap' low handle to indicator handle
+          // if (
+          //   this.tracking === 'lowValue' &&
+          //   Math.abs(newPos - this.indH.rzsp) < 25
+          // ) {
+          //   this.setPosition(this.minH, this.indH.rzsp)
+          //   return
+          // }
 
           this.setPosition(this.minH, newPos)
           this.translateFn(this.lowValue, this.minLab, 'model')
@@ -1350,14 +1352,14 @@
          * @returns {undefined}
          */
         updateHighHandle: function(newPos) {
-          // 'snap' high handle to indicator handle
-          if (
-            this.tracking === 'highValue' &&
-            Math.abs(newPos - this.indH.rzsp) < 25
-          ) {
-            this.setPosition(this.maxH, this.indH.rzsp)
-            return
-          }
+          // // 'snap' high handle to indicator handle
+          // if (
+          //   this.tracking === 'highValue' &&
+          //   Math.abs(newPos - this.indH.rzsp) < 25
+          // ) {
+          //   this.setPosition(this.maxH, this.indH.rzsp)
+          //   return
+          // }
 
           this.setPosition(this.maxH, newPos)
           this.translateFn(this.highValue, this.maxLab, 'high')
@@ -2004,10 +2006,18 @@
               'mousedown',
               angular.bind(this, this.onStart, this.minH, 'lowValue')
             )
+            this.minH.on(
+              'dblclick',
+              angular.bind(this, this.onDblClick, this.minH, 'lowValue')
+            )
             if (this.range) {
               this.maxH.on(
                 'mousedown',
                 angular.bind(this, this.onStart, this.maxH, 'highValue')
+              )
+              this.maxH.on(
+                'dblclick',
+                angular.bind(this, this.onDblClick, this.maxH, 'highValue')
               )
             }
             if (this.indicator) {
@@ -2058,12 +2068,12 @@
           } else {
             this.minH.on(
               'touchstart',
-              angular.bind(this, this.onStart, this.minH, 'lowValue')
+              angular.bind(this, this.onTouchStart, this.minH, 'lowValue')
             )
             if (this.range) {
               this.maxH.on(
                 'touchstart',
-                angular.bind(this, this.onStart, this.maxH, 'highValue')
+                angular.bind(this, this.onTouchStart, this.maxH, 'highValue')
               )
             }
             if (this.indicator) {
@@ -2261,6 +2271,36 @@
           $document.off(eventName.endEvent, this.endHandlerToBeRemovedOnEnd)
           this.endHandlerToBeRemovedOnEnd = null
           this.callOnEnd()
+        },
+
+        onTouchStart: function(pointer, ref, event) {
+          var self = this
+          if (!self.tappedTwice) {
+            self.tappedTwice = true
+            setTimeout(function() {
+              self.tappedTwice = false
+            }, 300)
+            self.onStart(pointer, ref, event)
+            return
+          } else {
+            // event.preventDefault();
+            //action on double tap goes below
+            self.onDblClick(pointer, ref, event)
+            self.tappedTwice = false
+          }
+        },
+
+        onDblClick: function(pointer, ref, event) {
+          event.preventDefault()
+          if (ref === 'lowValue') {
+            this.scope.rzSliderModel = this.scope.rzSliderIndicator
+            this.onLowHandleChange()
+          } else if (ref === 'highValue') {
+            this.scope.rzSliderHigh = this.scope.rzSliderIndicator
+            this.onHighHandleChange()
+          } else {
+            return
+          }
         },
 
         onTickClick: function(pointer, event) {
