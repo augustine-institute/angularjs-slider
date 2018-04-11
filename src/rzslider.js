@@ -363,6 +363,13 @@
         this.cmbLab = null // Combined label
         this.ticks = null // The ticks
 
+        // used in onTouchStart to detect double taps
+        this.tappedTwice = false
+
+        // used when snapping occurs to lock handle to position and not move accidentally
+        this.lockLowHandle = false
+        this.lockHighHandle = false
+
         // Initialize slider
         this.init()
       }
@@ -588,7 +595,6 @@
        * Reflow the slider when the low handle changes (called with throttle)
        */
         onLowHandleChange: function() {
-          // console.log("OnLowHandleChange() this.lowValue: ", this.lowValue)
           this.syncLowValue()
           if (this.range) this.syncHighValue()
           this.setMinAndMax()
@@ -1315,14 +1321,14 @@
         updateLowHandle: function(newPos) {
           // // console.log('updateLowHandle() newPos: ', newPos)
 
-          // 'snap' low handle to indicator handle
-          if (
-            this.tracking === 'lowValue' &&
-            Math.abs(newPos - this.indH.rzsp) < 25
-          ) {
-            this.setPosition(this.minH, this.indH.rzsp)
-            return
-          }
+          // // 'snap' low handle to indicator handle
+          // if (
+          //   this.tracking === 'lowValue' &&
+          //   Math.abs(newPos - this.indH.rzsp) < 25
+          // ) {
+          //   this.setPosition(this.minH, this.indH.rzsp)
+          //   return
+          // }
 
           this.setPosition(this.minH, newPos)
           this.translateFn(this.lowValue, this.minLab, 'model')
@@ -1350,14 +1356,14 @@
          * @returns {undefined}
          */
         updateHighHandle: function(newPos) {
-          // 'snap' high handle to indicator handle
-          if (
-            this.tracking === 'highValue' &&
-            Math.abs(newPos - this.indH.rzsp) < 25
-          ) {
-            this.setPosition(this.maxH, this.indH.rzsp)
-            return
-          }
+          // // 'snap' high handle to indicator handle
+          // if (
+          //   this.tracking === 'highValue' &&
+          //   Math.abs(newPos - this.indH.rzsp) < 25
+          // ) {
+          //   this.setPosition(this.maxH, this.indH.rzsp)
+          //   return
+          // }
 
           this.setPosition(this.maxH, newPos)
           this.translateFn(this.highValue, this.maxLab, 'high')
@@ -1941,8 +1947,16 @@
             distanceInd = Math.abs(position - this.indH.rzsp)
 
           if (distanceInd < 5) return this.indH
-          else if (distanceMin < distanceMax) return this.minH
-          else if (distanceMin > distanceMax) return this.maxH
+          else if (
+            (distanceMin < distanceMax && !this.lockLowHandle) ||
+            this.lockHighHandle
+          )
+            return this.minH
+          else if (
+            (distanceMin > distanceMax && !this.lockHighHandle) ||
+            this.lockLowHandle
+          )
+            return this.maxH
           else if (!this.options.rightToLeft)
             //if event is at the same distance from min/max then if it's at left of minH, we return minH else maxH
             return position < this.minH.rzsp ? this.minH : this.maxH
@@ -2004,10 +2018,18 @@
               'mousedown',
               angular.bind(this, this.onStart, this.minH, 'lowValue')
             )
+            this.minH.on(
+              'dblclick',
+              angular.bind(this, this.onDblClick, this.minH, 'lowValue')
+            )
             if (this.range) {
               this.maxH.on(
                 'mousedown',
                 angular.bind(this, this.onStart, this.maxH, 'highValue')
+              )
+              this.maxH.on(
+                'dblclick',
+                angular.bind(this, this.onDblClick, this.maxH, 'highValue')
               )
             }
             if (this.indicator) {
@@ -2058,12 +2080,12 @@
           } else {
             this.minH.on(
               'touchstart',
-              angular.bind(this, this.onStart, this.minH, 'lowValue')
+              angular.bind(this, this.onTouchStart, this.minH, 'lowValue')
             )
             if (this.range) {
               this.maxH.on(
                 'touchstart',
-                angular.bind(this, this.onStart, this.maxH, 'highValue')
+                angular.bind(this, this.onTouchStart, this.maxH, 'highValue')
               )
             }
             if (this.indicator) {
@@ -2155,6 +2177,12 @@
           } else {
             pointer = this.getNearestHandle(event)
             this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
+          }
+
+          if (this.tracking === 'lowValue') {
+            this.lockLowHandle = false
+          } else if (this.tracking === 'highValue') {
+            this.lockHighHandle = false
           }
 
           pointer.addClass('rz-active')
@@ -2261,6 +2289,38 @@
           $document.off(eventName.endEvent, this.endHandlerToBeRemovedOnEnd)
           this.endHandlerToBeRemovedOnEnd = null
           this.callOnEnd()
+        },
+
+        onTouchStart: function(pointer, ref, event) {
+          var self = this
+          if (!self.tappedTwice) {
+            self.tappedTwice = true
+            setTimeout(function() {
+              self.tappedTwice = false
+            }, 300)
+            self.onStart(pointer, ref, event)
+            return
+          } else {
+            // event.preventDefault();
+            //action on double tap goes below
+            self.onDblClick(pointer, ref, event)
+            self.tappedTwice = false
+          }
+        },
+
+        onDblClick: function(pointer, ref, event) {
+          event.preventDefault()
+          if (ref === 'lowValue') {
+            this.scope.rzSliderModel = this.scope.rzSliderIndicator
+            this.onLowHandleChange()
+            this.lockLowHandle = true
+          } else if (ref === 'highValue') {
+            this.scope.rzSliderHigh = this.scope.rzSliderIndicator
+            this.onHighHandleChange()
+            this.lockHighHandle = true
+          } else {
+            return
+          }
         },
 
         onTickClick: function(pointer, event) {
@@ -2405,6 +2465,8 @@
          */
         onDragStart: function(pointer, ref, event) {
           // console.log('onDragStart() pointer: ', pointer)
+          this.lockLowHandle = false
+          this.lockHighHandle = false
           var position = this.getEventPosition(event)
           this.dragging = {
             active: true,
@@ -2672,6 +2734,9 @@
           // if smaller than minRange
           if (difference < minRange) {
             if (this.tracking === 'lowValue') {
+              if (this.lockHighHandle) {
+                return this.lowValue
+              }
               this.highValue = Math.min(newValue + minRange, this.maxValue)
               newValue = this.highValue - minRange
               this.applyHighValue()
@@ -2679,7 +2744,10 @@
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else if (this.tracking !== 'indicatorValue') {
+            } else if (this.tracking === 'highValue') {
+              if (this.lockLowHandle) {
+                return this.highValue
+              }
               this.lowValue = Math.max(newValue - minRange, this.minValue)
               newValue = this.lowValue + minRange
               this.applyLowValue()
@@ -2692,13 +2760,19 @@
           } else if (maxRange !== null && difference > maxRange) {
             // if greater than maxRange
             if (this.tracking === 'lowValue') {
+              if (this.lockHighHandle) {
+                return this.lowValue
+              }
               this.highValue = newValue + maxRange
               this.applyHighValue()
               this.updateHandles(
                 'highValue',
                 this.valueToPosition(this.highValue)
               )
-            } else if (this.tracking !== 'indicatorValue') {
+            } else if (this.tracking === 'highValue') {
+              if (this.lockLowHandle) {
+                return this.highValue
+              }
               this.lowValue = newValue - maxRange
               this.applyLowValue()
               this.updateHandles(
