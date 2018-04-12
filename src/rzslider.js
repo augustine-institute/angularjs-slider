@@ -2324,8 +2324,9 @@
           } else {
             return
           }
-
+          // remove focus because user just snapped the handle
           pointer.blur()
+          // select indicator handle to immediately be able to adjust other handle
           if (this.indicator) this.indH.focus()
         },
 
@@ -2353,7 +2354,6 @@
         },
 
         onPointerBlur: function(pointer) {
-          console.log('onPointerBlur()')
           pointer.off('keydown')
           pointer.off('keyup')
           pointer.removeClass('rz-active')

@@ -489,8 +489,7 @@
           })
 
           // always focus on the ind handle upon init
-          if (this.indicator) this.indH.focus();
-
+          if (this.indicator) this.indH.focus()
         },
 
         findStepIndex: function(modelValue) {
@@ -2321,10 +2320,10 @@
           } else {
             return
           }
-
-          pointer.blur();
-          if (this.indicator) this.indH.focus();
-
+          // remove focus because user just snapped the handle
+          pointer.blur()
+          // select indicator handle to immediately be able to adjust other handle
+          if (this.indicator) this.indH.focus()
         },
 
         onTickClick: function(pointer, event) {
@@ -2351,7 +2350,6 @@
         },
 
         onPointerBlur: function(pointer) {
-          console.log("onPointerBlur()")
           pointer.off('keydown')
           pointer.off('keyup')
           pointer.removeClass('rz-active')
