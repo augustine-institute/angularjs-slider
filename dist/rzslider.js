@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-04-11 */
+ 2018-04-12 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -360,11 +360,11 @@
         this.ticks = null // The ticks
 
         // used in onTouchStart to detect double taps
-        this.tappedTwice = false;
+        this.tappedTwice = false
 
         // used when snapping occurs to lock handle to position and not move accidentally
-        this.lockLowHandle = false;
-        this.lockHighHandle = false;
+        this.lockLowHandle = false
+        this.lockHighHandle = false
 
         // Initialize slider
         this.init()
@@ -487,6 +487,9 @@
             angular.element($window).off('resize', calcDimFn)
             self.currentFocusElement = null
           })
+
+          // always focus on the ind handle upon init
+          if (this.indicator) this.indH.focus()
         },
 
         findStepIndex: function(modelValue) {
@@ -1943,8 +1946,16 @@
             distanceInd = Math.abs(position - this.indH.rzsp)
 
           if (distanceInd < 5) return this.indH
-          else if ((distanceMin < distanceMax && !this.lockLowHandle) || this.lockHighHandle) return this.minH
-          else if ((distanceMin > distanceMax && !this.lockHighHandle) || this.lockLowHandle) return this.maxH
+          else if (
+            (distanceMin < distanceMax && !this.lockLowHandle) ||
+            this.lockHighHandle
+          )
+            return this.minH
+          else if (
+            (distanceMin > distanceMax && !this.lockHighHandle) ||
+            this.lockLowHandle
+          )
+            return this.maxH
           else if (!this.options.rightToLeft)
             //if event is at the same distance from min/max then if it's at left of minH, we return minH else maxH
             return position < this.minH.rzsp ? this.minH : this.maxH
@@ -2167,10 +2178,10 @@
             this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
           }
 
-          if (this.tracking === 'lowValue'){
-            this.lockLowHandle = false;
-          } else if (this.tracking === 'highValue'){
-            this.lockHighHandle = false;
+          if (this.tracking === 'lowValue') {
+            this.lockLowHandle = false
+          } else if (this.tracking === 'highValue') {
+            this.lockHighHandle = false
           }
 
           pointer.addClass('rz-active')
@@ -2301,14 +2312,18 @@
           if (ref === 'lowValue') {
             this.scope.rzSliderModel = this.scope.rzSliderIndicator
             this.onLowHandleChange()
-            this.lockLowHandle = true;
+            this.lockLowHandle = true
           } else if (ref === 'highValue') {
             this.scope.rzSliderHigh = this.scope.rzSliderIndicator
             this.onHighHandleChange()
-            this.lockHighHandle = true;
+            this.lockHighHandle = true
           } else {
             return
           }
+          // remove focus because user just snapped the handle
+          pointer.blur()
+          // select indicator handle to immediately be able to adjust other handle
+          if (this.indicator) this.indH.focus()
         },
 
         onTickClick: function(pointer, event) {
@@ -2453,8 +2468,8 @@
          */
         onDragStart: function(pointer, ref, event) {
           // console.log('onDragStart() pointer: ', pointer)
-          this.lockLowHandle = false;
-          this.lockHighHandle = false;
+          this.lockLowHandle = false
+          this.lockHighHandle = false
           var position = this.getEventPosition(event)
           this.dragging = {
             active: true,
@@ -2748,8 +2763,8 @@
           } else if (maxRange !== null && difference > maxRange) {
             // if greater than maxRange
             if (this.tracking === 'lowValue') {
-              if(this.lockHighHandle){
-                return this.lowValue;
+              if (this.lockHighHandle) {
+                return this.lowValue
               }
               this.highValue = newValue + maxRange
               this.applyHighValue()

@@ -491,6 +491,9 @@
             angular.element($window).off('resize', calcDimFn)
             self.currentFocusElement = null
           })
+
+          // always focus on the ind handle upon init
+          if (this.indicator) this.indH.focus()
         },
 
         findStepIndex: function(modelValue) {
@@ -2321,6 +2324,10 @@
           } else {
             return
           }
+          // remove focus because user just snapped the handle
+          pointer.blur()
+          // select indicator handle to immediately be able to adjust other handle
+          if (this.indicator) this.indH.focus()
         },
 
         onTickClick: function(pointer, event) {
