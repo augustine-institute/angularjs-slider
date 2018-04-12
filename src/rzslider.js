@@ -2314,12 +2314,10 @@
         onDblClick: function(pointer, ref, event) {
           event.preventDefault()
           if (ref === 'lowValue') {
-            // this.scope.rzSliderModel = this.scope.rzSliderIndicator
             this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onLowHandleChange()
             this.lockLowHandle = true
           } else if (ref === 'highValue') {
-            // this.scope.rzSliderHigh = this.scope.rzSliderIndicator
             this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onHighHandleChange()
             this.lockHighHandle = true
@@ -2873,12 +2871,6 @@
               )
             })
           }
-
-          // console.log("callOnEnd() rzSliderIndicator: ", this.scope.rzSliderIndicator);
-          console.log(
-            'callOnEnd() this.rzSliderModel: ',
-            this.scope.rzSliderModel
-          )
 
           if (this.tracking === 'indicatorValue') {
             this.scope.$emit('indicatorSlideEnded')
