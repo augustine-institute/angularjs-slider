@@ -2310,16 +2310,19 @@
         onDblClick: function(pointer, ref, event) {
           event.preventDefault()
           if (ref === 'lowValue') {
-            this.scope.rzSliderModel = this.scope.rzSliderIndicator
+            // this.scope.rzSliderModel = this.scope.rzSliderIndicator
+            this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onLowHandleChange()
             this.lockLowHandle = true
           } else if (ref === 'highValue') {
-            this.scope.rzSliderHigh = this.scope.rzSliderIndicator
+            // this.scope.rzSliderHigh = this.scope.rzSliderIndicator
+            this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onHighHandleChange()
             this.lockHighHandle = true
           } else {
             return
           }
+          this.callOnEnd();
           // remove focus because user just snapped the handle
           pointer.blur()
           // select indicator handle to immediately be able to adjust other handle
@@ -2868,7 +2871,7 @@
           }
 
           // console.log("callOnEnd() rzSliderIndicator: ", this.scope.rzSliderIndicator);
-          // console.log("callOnEnd() this.indicatorValue: ", this.indicatorValue);
+          console.log("callOnEnd() this.rzSliderModel: ", this.scope.rzSliderModel);
 
           if (this.tracking === 'indicatorValue') {
             this.scope.$emit('indicatorSlideEnded')
