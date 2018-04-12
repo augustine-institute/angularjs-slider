@@ -491,6 +491,9 @@
             angular.element($window).off('resize', calcDimFn)
             self.currentFocusElement = null
           })
+
+          // always focus on the ind handle upon init
+          if (this.indicator) this.indH.focus()
         },
 
         findStepIndex: function(modelValue) {
@@ -2321,6 +2324,9 @@
           } else {
             return
           }
+
+          pointer.blur()
+          if (this.indicator) this.indH.focus()
         },
 
         onTickClick: function(pointer, event) {
@@ -2347,6 +2353,7 @@
         },
 
         onPointerBlur: function(pointer) {
+          console.log('onPointerBlur()')
           pointer.off('keydown')
           pointer.off('keyup')
           pointer.removeClass('rz-active')
