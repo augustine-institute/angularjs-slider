@@ -501,7 +501,11 @@
           })
 
           // always focus on the ind handle upon init
-          if (this.indicator) {
+          this.activateIndicatorFocusInterval()
+        },
+
+        activateIndicatorFocusInterval: function() {
+          if (this.indicator && !this.focusIndicatorInterval) {
             var self = this
             var autoFocusIndicator = function() {
               if (self.tracking !== 'lowValue' && self.tracking !== 'highValue')
@@ -2193,6 +2197,7 @@
           if (pointer) {
             this.tracking = ref
           } else {
+            return
             // pointer = this.getNearestHandle(event)
             // this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
           }
@@ -2891,6 +2896,9 @@
               )
             })
           }
+
+          // reactivate indicator focus feature when reengaging the player in any way; removed upon focus on another text field in the topic share modal
+          this.activateIndicatorFocusInterval()
 
           if (this.tracking === 'indicatorValue') {
             this.scope.$emit('indicatorSlideEnded')
