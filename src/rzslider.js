@@ -169,6 +169,7 @@
       $document,
       $window,
       $compile,
+      $interval,
       RzSliderOptions,
       rzThrottle
     ) {
@@ -493,7 +494,14 @@
           })
 
           // always focus on the ind handle upon init
-          if (this.indicator) this.indH.focus()
+          if (this.indicator) {
+            var self = this
+            var autoFocusIndicator = function() {
+              if (self.tracking !== 'lowValue' && self.tracking !== 'highValue')
+                self.indH.focus()
+            }
+            this.focusIndicatorInterval = $interval(autoFocusIndicator, 500)
+          }
         },
 
         findStepIndex: function(modelValue) {
@@ -2225,7 +2233,7 @@
          */
         onMove: function(pointer, event, fromTick) {
           // console.log("onMove() this.lowValue start: ", this.lowValue)
-          // console.log('onMove() pointer: ', pointer)
+
           var changedTouches = this.getEventAttr(event, 'changedTouches')
           var touchForThisSlider
           if (changedTouches) {
@@ -2824,11 +2832,14 @@
             })
           }
 
-          if (this.tracking === 'indicatorValue') {
-            this.scope.$emit('indicatorSlideStart')
-          } else {
-            this.scope.$emit('slideStarted')
-          }
+          // // NOTE Keep this in case there's a need for a specific indicator handle start event
+          // if (this.tracking === 'indicatorValue') {
+          //   this.scope.$emit('indicatorSlideStart')
+          // } else {
+          //   this.scope.$emit('slideStarted')
+          // }
+
+          this.scope.$emit('slideStarted')
         },
 
         /**
