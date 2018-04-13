@@ -487,6 +487,13 @@
             }
           })
 
+          this.scope.$on('blurSlider', function() {
+            if (self.focusIndicatorInterval) {
+              $interval.cancel(self.focusIndicatorInterval)
+              self.focusIndicatorInterval = null
+            }
+          })
+
           this.scope.$on('$destroy', function() {
             self.unbindEvents()
             angular.element($window).off('resize', calcDimFn)
@@ -2186,15 +2193,15 @@
           if (pointer) {
             this.tracking = ref
           } else {
-            pointer = this.getNearestHandle(event)
-            this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
+            // pointer = this.getNearestHandle(event)
+            // this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
           }
 
-          if (this.tracking === 'lowValue') {
-            this.lockLowHandle = false
-          } else if (this.tracking === 'highValue') {
-            this.lockHighHandle = false
-          }
+          // if (this.tracking === 'lowValue') {
+          //   this.lockLowHandle = false
+          // } else if (this.tracking === 'highValue') {
+          //   this.lockHighHandle = false
+          // }
 
           pointer.addClass('rz-active')
 
@@ -2322,10 +2329,12 @@
         onDblClick: function(pointer, ref, event) {
           event.preventDefault()
           if (ref === 'lowValue') {
+            this.lockLowHandle = false
             this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onLowHandleChange()
             this.lockLowHandle = true
           } else if (ref === 'highValue') {
+            this.lockHighHandle = false
             this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onHighHandleChange()
             this.lockHighHandle = true
