@@ -487,6 +487,13 @@
             }
           })
 
+          this.scope.$on('blurSlider', function() {
+            if (self.focusIndicatorInterval) {
+              $interval.cancel(self.focusIndicatorInterval)
+              self.focusIndicatorInterval = null
+            }
+          })
+
           this.scope.$on('$destroy', function() {
             self.unbindEvents()
             angular.element($window).off('resize', calcDimFn)
@@ -494,7 +501,11 @@
           })
 
           // always focus on the ind handle upon init
-          if (this.indicator) {
+          this.activateIndicatorFocusInterval()
+        },
+
+        activateIndicatorFocusInterval: function() {
+          if (this.indicator && !this.focusIndicatorInterval) {
             var self = this
             var autoFocusIndicator = function() {
               if (self.tracking !== 'lowValue' && self.tracking !== 'highValue')
@@ -2186,15 +2197,16 @@
           if (pointer) {
             this.tracking = ref
           } else {
-            pointer = this.getNearestHandle(event)
-            this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
+            return
+            // pointer = this.getNearestHandle(event)
+            // this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
           }
 
-          if (this.tracking === 'lowValue') {
-            this.lockLowHandle = false
-          } else if (this.tracking === 'highValue') {
-            this.lockHighHandle = false
-          }
+          // if (this.tracking === 'lowValue') {
+          //   this.lockLowHandle = false
+          // } else if (this.tracking === 'highValue') {
+          //   this.lockHighHandle = false
+          // }
 
           pointer.addClass('rz-active')
 
@@ -2322,10 +2334,12 @@
         onDblClick: function(pointer, ref, event) {
           event.preventDefault()
           if (ref === 'lowValue') {
+            this.lockLowHandle = false
             this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onLowHandleChange()
             this.lockLowHandle = true
           } else if (ref === 'highValue') {
+            this.lockHighHandle = false
             this.positionTrackingHandle(this.scope.rzSliderIndicator)
             this.onHighHandleChange()
             this.lockHighHandle = true
@@ -2882,6 +2896,9 @@
               )
             })
           }
+
+          // reactivate indicator focus feature when reengaging the player in any way; removed upon focus on another text field in the topic share modal
+          this.activateIndicatorFocusInterval()
 
           if (this.tracking === 'indicatorValue') {
             this.scope.$emit('indicatorSlideEnded')
