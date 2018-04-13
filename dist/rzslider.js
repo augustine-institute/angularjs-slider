@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-04-12 */
+ 2018-04-13 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -160,11 +160,12 @@
         }
       }
     }])
-    .factory('RzSlider', ['$timeout', '$document', '$window', '$compile', 'RzSliderOptions', 'rzThrottle', function(
+    .factory('RzSlider', ['$timeout', '$document', '$window', '$compile', '$interval', 'RzSliderOptions', 'rzThrottle', function(
       $timeout,
       $document,
       $window,
       $compile,
+      $interval,
       RzSliderOptions,
       rzThrottle
     ) {
@@ -489,7 +490,13 @@
           })
 
           // always focus on the ind handle upon init
-          if (this.indicator) this.indH.focus()
+          if (this.indicator) {
+            var self = this;
+            var autoFocusIndicator = function () {
+              if (self.tracking !== 'lowValue' && self.tracking !== 'highValue') self.indH.focus();
+            }
+            this.focusIndicatorInterval = $interval(autoFocusIndicator, 500)
+          }
         },
 
         findStepIndex: function(modelValue) {
@@ -2221,7 +2228,7 @@
          */
         onMove: function(pointer, event, fromTick) {
           // console.log("onMove() this.lowValue start: ", this.lowValue)
-          // console.log('onMove() pointer: ', pointer)
+
           var changedTouches = this.getEventAttr(event, 'changedTouches')
           var touchForThisSlider
           if (changedTouches) {
@@ -2820,11 +2827,15 @@
             })
           }
 
-          if (this.tracking === 'indicatorValue') {
-            this.scope.$emit('indicatorSlideStart')
-          } else {
-            this.scope.$emit('slideStarted')
-          }
+          // // NOTE Keep this in case there's a need for a specific indicator handle start event
+          // if (this.tracking === 'indicatorValue') {
+          //   this.scope.$emit('indicatorSlideStart')
+          // } else {
+          //   this.scope.$emit('slideStarted')
+          // }
+
+          this.scope.$emit('slideStarted')
+
         },
 
         /**
