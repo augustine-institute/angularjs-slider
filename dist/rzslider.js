@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-04-13 */
+ 2018-04-16 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -497,13 +497,13 @@
           })
 
           // always focus on the ind handle upon init
-          this.activateIndicatorFocusInterval();
+          this.activateIndicatorFocusInterval()
         },
 
         activateIndicatorFocusInterval: function() {
           if (this.indicator && !this.focusIndicatorInterval) {
             var self = this
-            var autoFocusIndicator = function () {
+            var autoFocusIndicator = function() {
               if (self.tracking !== 'lowValue' && self.tracking !== 'highValue')
                 self.indH.focus()
             }
@@ -865,6 +865,10 @@
           this.alwaysHide(
             this.maxLab,
             hideLabelsForTicks || !this.range || this.options.hidePointerLabels
+          )
+          this.alwaysHide(
+            this.indLab,
+            hideLabelsForTicks || !this.indicator || this.options.hidePointerLabels
           )
           this.alwaysHide(
             this.cmbLab,

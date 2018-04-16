@@ -871,6 +871,12 @@
             hideLabelsForTicks || !this.range || this.options.hidePointerLabels
           )
           this.alwaysHide(
+            this.indLab,
+            hideLabelsForTicks ||
+              !this.indicator ||
+              this.options.hidePointerLabels
+          )
+          this.alwaysHide(
             this.cmbLab,
             hideLabelsForTicks || !this.range || this.options.hidePointerLabels
           )
