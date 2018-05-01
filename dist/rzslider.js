@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-04-16 */
+ 2018-05-01 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -713,6 +713,14 @@
 
           if (this.options.customTemplateScope)
             this.scope.custom = this.options.customTemplateScope
+          
+          if (this.options.backgroundImageUrl){
+            this.scope.isBackgroundSlider = true;
+            this.scope.sliderBackgroundStyle = {
+              backgroundImage: 'url(' + this.options.backgroundImageUrl + ')',
+            }
+          }
+           
         },
 
         parseStepsArray: function() {
@@ -868,7 +876,9 @@
           )
           this.alwaysHide(
             this.indLab,
-            hideLabelsForTicks || !this.indicator || this.options.hidePointerLabels
+            hideLabelsForTicks ||
+              !this.indicator ||
+              this.options.hidePointerLabels
           )
           this.alwaysHide(
             this.cmbLab,
@@ -1143,8 +1153,9 @@
          */
         calcViewDimensions: function() {
           var handleWidth = this.getDimension(this.minH)
-
-          this.handleHalfDim = handleWidth / 2
+          console.log("calcViewDimensions() handleWidth:", handleWidth);
+          
+          this.handleHalfDim = handleWidth;
           this.barDimension = this.getDimension(this.fullBar)
 
           this.maxPos = this.barDimension - handleWidth
@@ -1513,12 +1524,14 @@
               ? !this.options.showSelectionBarEnd
               : this.options.showSelectionBarEnd,
             positionForRange = this.options.rightToLeft
-              ? this.maxH.rzsp + this.handleHalfDim
-              : this.minH.rzsp + this.handleHalfDim
-
+              ? this.maxH.rzsp
+              : this.minH.rzsp
+          console.log("updateSelectionBar() this.handleHalfDim: ", this.handleHalfDim);
+          console.log("updateSelectionBar() positionForRange: ", positionForRange);
           if (this.range) {
             dimension = Math.abs(this.maxH.rzsp - this.minH.rzsp)
             position = positionForRange
+            console.log("updateSelectionBar() position set to positionForRange");
           } else {
             if (this.options.showSelectionBarFromValue !== null) {
               var center = this.options.showSelectionBarFromValue,
@@ -2979,7 +2992,7 @@
   'use strict';
 
   $templateCache.put('rzSliderTpl.html',
-    "<div class=rzslider><span class=\"rz-bar-wrapper rz-left-out-selection\"><span class=rz-bar></span></span> <span class=\"rz-bar-wrapper rz-right-out-selection\"><span class=rz-bar></span></span> <span class=rz-bar-wrapper><span class=rz-bar></span></span> <span class=rz-bar-wrapper><span class=\"rz-bar rz-selection\" ng-style=barStyle></span></span> <span class=\"rz-pointer rz-pointer-min\" ng-style=minPointerStyle></span> <span class=\"rz-pointer rz-pointer-max\" ng-style=maxPointerStyle></span> <span class=\"rz-bubble rz-limit rz-floor\"></span> <span class=\"rz-bubble rz-limit rz-ceil\"></span> <span class=\"rz-bubble rz-model-value\"></span> <span class=\"rz-bubble rz-model-high\"></span> <span class=rz-bubble></span><ul ng-show=showTicks class=rz-ticks><li ng-repeat=\"t in ticks track by $index\" class=rz-tick ng-class=\"{'rz-selected': t.selected}\" ng-style=t.style ng-attr-uib-tooltip=\"{{ t.tooltip }}\" ng-attr-tooltip-placement={{t.tooltipPlacement}} ng-attr-tooltip-append-to-body=\"{{ t.tooltip ? true : undefined}}\"><span ng-if=\"t.value != null\" class=rz-tick-value ng-attr-uib-tooltip=\"{{ t.valueTooltip }}\" ng-attr-tooltip-placement={{t.valueTooltipPlacement}}>{{ t.value }}</span> <span ng-if=\"t.legend != null\" class=rz-tick-legend>{{ t.legend }}</span></li></ul><span class=\"rz-pointer rz-pointer-indicator\" ng-style=indicatorPointerStyle></span> <span class=\"rz-bubble rz-model-indicator\"></span></div>"
+    "<div class=rzslider><span class=\"rz-bar-wrapper rz-left-out-selection\"><span class=rz-bar></span></span> <span class=\"rz-bar-wrapper rz-right-out-selection\"><span class=rz-bar></span></span> <span class=rz-bar-wrapper ng-style=sliderBackgroundStyle ng-class=\"{'background-slider': isBackgroundSlider}\"><span class=rz-bar></span></span> <span class=rz-bar-wrapper ng-class=\"{'background-slider': isBackgroundSlider}\"><span class=\"rz-bar rz-selection\" ng-style=barStyle></span></span> <span class=\"rz-pointer rz-pointer-min\" ng-style=minPointerStyle ng-class=\"{'background-slider': isBackgroundSlider}\"></span> <span class=\"rz-pointer rz-pointer-max\" ng-style=maxPointerStyle ng-class=\"{'background-slider': isBackgroundSlider}\"></span> <span class=\"rz-bubble rz-limit rz-floor\"></span> <span class=\"rz-bubble rz-limit rz-ceil\"></span> <span class=\"rz-bubble rz-model-value\"></span> <span class=\"rz-bubble rz-model-high\"></span> <span class=rz-bubble></span><ul ng-show=showTicks class=rz-ticks><li ng-repeat=\"t in ticks track by $index\" class=rz-tick ng-class=\"{'rz-selected': t.selected}\" ng-style=t.style ng-attr-uib-tooltip=\"{{ t.tooltip }}\" ng-attr-tooltip-placement={{t.tooltipPlacement}} ng-attr-tooltip-append-to-body=\"{{ t.tooltip ? true : undefined}}\"><span ng-if=\"t.value != null\" class=rz-tick-value ng-attr-uib-tooltip=\"{{ t.valueTooltip }}\" ng-attr-tooltip-placement={{t.valueTooltipPlacement}}>{{ t.value }}</span> <span ng-if=\"t.legend != null\" class=rz-tick-legend>{{ t.legend }}</span></li></ul><span class=\"rz-pointer rz-pointer-indicator\" ng-style=indicatorPointerStyle ng-class=\"{'background-slider': isBackgroundSlider}\"></span> <span class=\"rz-bubble rz-model-indicator\"></span></div>"
   );
 
 }]);

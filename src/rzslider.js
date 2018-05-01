@@ -717,6 +717,13 @@
 
           if (this.options.customTemplateScope)
             this.scope.custom = this.options.customTemplateScope
+
+          if (this.options.backgroundImageUrl) {
+            this.scope.isBackgroundSlider = true
+            this.scope.sliderBackgroundStyle = {
+              backgroundImage: 'url(' + this.options.backgroundImageUrl + ')',
+            }
+          }
         },
 
         parseStepsArray: function() {
@@ -1149,8 +1156,9 @@
          */
         calcViewDimensions: function() {
           var handleWidth = this.getDimension(this.minH)
+          console.log('calcViewDimensions() handleWidth:', handleWidth)
 
-          this.handleHalfDim = handleWidth / 2
+          this.handleHalfDim = handleWidth
           this.barDimension = this.getDimension(this.fullBar)
 
           this.maxPos = this.barDimension - handleWidth
@@ -1519,12 +1527,20 @@
               ? !this.options.showSelectionBarEnd
               : this.options.showSelectionBarEnd,
             positionForRange = this.options.rightToLeft
-              ? this.maxH.rzsp + this.handleHalfDim
-              : this.minH.rzsp + this.handleHalfDim
-
+              ? this.maxH.rzsp
+              : this.minH.rzsp
+          console.log(
+            'updateSelectionBar() this.handleHalfDim: ',
+            this.handleHalfDim
+          )
+          console.log(
+            'updateSelectionBar() positionForRange: ',
+            positionForRange
+          )
           if (this.range) {
             dimension = Math.abs(this.maxH.rzsp - this.minH.rzsp)
             position = positionForRange
+            console.log('updateSelectionBar() position set to positionForRange')
           } else {
             if (this.options.showSelectionBarFromValue !== null) {
               var center = this.options.showSelectionBarFromValue,
