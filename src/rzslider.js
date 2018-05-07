@@ -2215,11 +2215,11 @@
             // this.tracking = pointer === this.minH ? 'lowValue' : 'highValue'
           }
 
-          // if (this.tracking === 'lowValue') {
-          //   this.lockLowHandle = false
-          // } else if (this.tracking === 'highValue') {
-          //   this.lockHighHandle = false
-          // }
+          if (this.tracking === 'lowValue') {
+            this.lockLowHandle = false
+          } else if (this.tracking === 'highValue') {
+            this.lockHighHandle = false
+          }
 
           pointer.addClass('rz-active')
 
