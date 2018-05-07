@@ -1529,18 +1529,9 @@
             positionForRange = this.options.rightToLeft
               ? this.maxH.rzsp
               : this.minH.rzsp
-          console.log(
-            'updateSelectionBar() this.handleHalfDim: ',
-            this.handleHalfDim
-          )
-          console.log(
-            'updateSelectionBar() positionForRange: ',
-            positionForRange
-          )
           if (this.range) {
             dimension = Math.abs(this.maxH.rzsp - this.minH.rzsp)
             position = positionForRange
-            console.log('updateSelectionBar() position set to positionForRange')
           } else {
             if (this.options.showSelectionBarFromValue !== null) {
               var center = this.options.showSelectionBarFromValue,
@@ -1948,7 +1939,7 @@
           if (this.options.vertical)
             eventPos = -this.getEventXY(event, targetTouchId) + sliderPos
           else eventPos = this.getEventXY(event, targetTouchId) - sliderPos
-          return eventPos * this.options.scale - this.handleHalfDim // #346 handleHalfDim is already scaled
+          return eventPos * this.options.scale // #346 handleHalfDim is already scaled
         },
 
         /**
