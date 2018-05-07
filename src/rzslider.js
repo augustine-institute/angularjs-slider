@@ -1156,12 +1156,13 @@
          */
         calcViewDimensions: function() {
           var handleWidth = this.getDimension(this.minH)
+          var indHandleWidth = this.getDimension(this.indH)
           console.log('calcViewDimensions() handleWidth:', handleWidth)
 
-          this.handleHalfDim = handleWidth
+          this.handleHalfDim = handleWidth / 2
           this.barDimension = this.getDimension(this.fullBar)
 
-          this.maxPos = this.barDimension - handleWidth
+          this.maxPos = this.barDimension - indHandleWidth
 
           this.getDimension(this.sliderElem)
           this.sliderElem.rzsp = this.sliderElem[0].getBoundingClientRect()[
