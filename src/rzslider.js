@@ -1421,7 +1421,17 @@
         },
 
         updateIndHandle: function(newPos) {
-          // // console.log('updateIndHandle() newPos: ', newPos)
+          if (this.tracking === 'indicatorValue' && newPos >= this.maxH.rzsp) {
+            this.setPosition(this.indH, this.maxH.rzsp)
+            return
+          } else if (
+            this.tracking === 'indicatorValue' &&
+            newPos <= this.minH.rzsp
+          ) {
+            this.setPosition(this.indH, this.minH.rzsp)
+            return
+          }
+
           this.setPosition(this.indH, newPos)
           this.translateFn(this.indicatorValue, this.indLab, 'ind')
           this.setPosition(

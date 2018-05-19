@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-05-07 */
+ 2018-05-18 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -1151,14 +1151,14 @@
          * @returns {undefined}
          */
         calcViewDimensions: function() {
-          var handleWidth = this.getDimension(this.minH);
-          var indHandleWidth = this.getDimension(this.indH);
+          var handleWidth = this.getDimension(this.minH)
+          var indHandleWidth = this.getDimension(this.indH)
           console.log('calcViewDimensions() handleWidth:', handleWidth)
 
-          this.handleHalfDim = handleWidth/2;
+          this.handleHalfDim = handleWidth / 2
           this.barDimension = this.getDimension(this.fullBar)
 
-          this.maxPos = this.barDimension - indHandleWidth;
+          this.maxPos = this.barDimension - indHandleWidth
 
           this.getDimension(this.sliderElem)
           this.sliderElem.rzsp = this.sliderElem[0].getBoundingClientRect()[
@@ -1417,7 +1417,14 @@
         },
 
         updateIndHandle: function(newPos) {
-          // // console.log('updateIndHandle() newPos: ', newPos)
+          if ( this.tracking === 'indicatorValue' && newPos >= this.maxH.rzsp ) {
+            this.setPosition(this.indH, this.maxH.rzsp)
+            return
+          } else if ( this.tracking === 'indicatorValue' && newPos <= this.minH.rzsp ) {
+            this.setPosition(this.indH, this.minH.rzsp)
+            return
+          } 
+
           this.setPosition(this.indH, newPos)
           this.translateFn(this.indicatorValue, this.indLab, 'ind')
           this.setPosition(
