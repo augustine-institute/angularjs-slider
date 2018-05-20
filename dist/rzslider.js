@@ -2452,7 +2452,7 @@
         },
 
         onKeyboardEvent: function(event) {
-          var keyPress = new Date().getTime();
+          var keyPress = new Date().getTime()
           var currentValue = this[this.tracking],
             keyCode = event.keyCode || event.which,
             keys = {
@@ -2476,12 +2476,12 @@
             // fire pause/play action
             // only fire once every quarter-second so as not to overwhelm the
             // component listening to this event
-            if(!this.lastKeypress || keyPress - this.lastKeypress > 250) {
-              this.scope.$emit('togglePlayPauseReplay');
-              this.lastKeypress = keyPress;
+            if (!this.lastKeypress || keyPress - this.lastKeypress > 250) {
+              this.scope.$emit('spaceKeyPressed')
+              this.lastKeypress = keyPress
             }
             // return so that none of the other stuff happens -> causes bugs
-            return;
+            return
           }
 
           if (this.firstKeyDown) {

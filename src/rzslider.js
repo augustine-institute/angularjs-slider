@@ -2481,7 +2481,7 @@
             // only fire once every quarter-second so as not to overwhelm the
             // component listening to this event
             if (!this.lastKeypress || keyPress - this.lastKeypress > 250) {
-              this.scope.$emit('togglePlayPauseReplay')
+              this.scope.$emit('spaceKeyPressed')
               this.lastKeypress = keyPress
             }
             // return so that none of the other stuff happens -> causes bugs
