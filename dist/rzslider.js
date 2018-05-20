@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-05-18 */
+ 2018-05-20 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -1417,13 +1417,16 @@
         },
 
         updateIndHandle: function(newPos) {
-          if ( this.tracking === 'indicatorValue' && newPos >= this.maxH.rzsp ) {
+          if (this.tracking === 'indicatorValue' && newPos >= this.maxH.rzsp) {
             this.setPosition(this.indH, this.maxH.rzsp)
             return
-          } else if ( this.tracking === 'indicatorValue' && newPos <= this.minH.rzsp ) {
+          } else if (
+            this.tracking === 'indicatorValue' &&
+            newPos <= this.minH.rzsp
+          ) {
             this.setPosition(this.indH, this.minH.rzsp)
             return
-          } 
+          }
 
           this.setPosition(this.indH, newPos)
           this.translateFn(this.indicatorValue, this.indLab, 'ind')
@@ -2425,6 +2428,7 @@
 
           //Left to right default actions
           var actions = {
+            SPACE: 'space',
             UP: increaseStep,
             DOWN: decreaseStep,
             LEFT: decreaseStep,
@@ -2448,9 +2452,11 @@
         },
 
         onKeyboardEvent: function(event) {
+          var keyPress = new Date().getTime();
           var currentValue = this[this.tracking],
             keyCode = event.keyCode || event.which,
             keys = {
+              32: 'SPACE',
               38: 'UP',
               40: 'DOWN',
               37: 'LEFT',
@@ -2465,6 +2471,18 @@
             action = actions[key]
           if (action == null || this.tracking === '') return
           event.preventDefault()
+
+          if (action === 'space') {
+            // fire pause/play action
+            // only fire once every quarter-second so as not to overwhelm the
+            // component listening to this event
+            if(!this.lastKeypress || keyPress - this.lastKeypress > 250) {
+              this.scope.$emit('togglePlayPauseReplay');
+              this.lastKeypress = keyPress;
+            }
+            // return so that none of the other stuff happens -> causes bugs
+            return;
+          }
 
           if (this.firstKeyDown) {
             this.firstKeyDown = false

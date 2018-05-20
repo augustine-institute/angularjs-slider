@@ -2432,6 +2432,7 @@
 
           //Left to right default actions
           var actions = {
+            SPACE: 'space',
             UP: increaseStep,
             DOWN: decreaseStep,
             LEFT: decreaseStep,
@@ -2455,9 +2456,11 @@
         },
 
         onKeyboardEvent: function(event) {
+          var keyPress = new Date().getTime()
           var currentValue = this[this.tracking],
             keyCode = event.keyCode || event.which,
             keys = {
+              32: 'SPACE',
               38: 'UP',
               40: 'DOWN',
               37: 'LEFT',
@@ -2472,6 +2475,18 @@
             action = actions[key]
           if (action == null || this.tracking === '') return
           event.preventDefault()
+
+          if (action === 'space') {
+            // fire pause/play action
+            // only fire once every quarter-second so as not to overwhelm the
+            // component listening to this event
+            if (!this.lastKeypress || keyPress - this.lastKeypress > 250) {
+              this.scope.$emit('togglePlayPauseReplay')
+              this.lastKeypress = keyPress
+            }
+            // return so that none of the other stuff happens -> causes bugs
+            return
+          }
 
           if (this.firstKeyDown) {
             this.firstKeyDown = false
