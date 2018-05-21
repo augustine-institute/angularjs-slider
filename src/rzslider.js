@@ -2456,7 +2456,7 @@
         },
 
         onKeyboardEvent: function(event) {
-          var keyPress = new Date().getTime()
+          var keyPressTimestamp = new Date().getTime()
           var currentValue = this[this.tracking],
             keyCode = event.keyCode || event.which,
             keys = {
@@ -2473,17 +2473,20 @@
             actions = this.getKeyActions(currentValue),
             key = keys[keyCode],
             action = actions[key]
-          if (action == null || this.tracking === '') return
+          // only fire once every 100 miliseconds so as not to overwhelm the
+          // component listening to these events
+          if (
+            action == null ||
+            this.tracking === '' ||
+            (this.lastKeypressTimestamp &&
+              keyPressTimestamp - this.lastKeypressTimestamp < 100)
+          )
+            return
           event.preventDefault()
+          this.lastKeypressTimestamp = keyPressTimestamp
 
           if (action === 'space') {
-            // fire pause/play action
-            // only fire once every quarter-second so as not to overwhelm the
-            // component listening to this event
-            if (!this.lastKeypress || keyPress - this.lastKeypress > 250) {
-              this.scope.$emit('spaceKeyPressed')
-              this.lastKeypress = keyPress
-            }
+            this.scope.$emit('spaceKeyPressed')
             // return so that none of the other stuff happens -> causes bugs
             return
           }
