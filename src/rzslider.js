@@ -1337,6 +1337,10 @@
             nearHandlePos = newPos - labelRzsd / 2 + this.handleHalfDim,
             endOfBarPos = this.barDimension - labelRzsd
 
+          if (labelName === 'minLab') nearHandlePos -= 21
+          if (labelName === 'maxLab') nearHandlePos += 13
+          if (labelName === 'indLab') nearHandlePos -= 7
+
           if (!this.options.boundPointerLabels) return nearHandlePos
 
           if (
@@ -1686,6 +1690,9 @@
               this.minLab.rzsp + this.minLab.rzsd + 10 >= this.maxLab.rzsp
           }
 
+          //test
+          isLabelOverlap = false
+
           if (isLabelOverlap) {
             var lowTr = this.getDisplayValue(this.lowValue, 'model'),
               highTr = this.getDisplayValue(this.highValue, 'high'),
@@ -1717,6 +1724,7 @@
             this.hideEl(this.maxLab)
             this.showEl(this.cmbLab)
           } else {
+            console.log('hitting cmbLabel hide')
             this.cmbLabelShown = false
             this.updateHighHandle(this.valueToPosition(this.highValue))
             this.updateLowHandle(this.valueToPosition(this.lowValue))

@@ -1,7 +1,7 @@
 /*! angularjs-slider - v6.5.0 - 
  (c) Rafal Zajac <rzajac@gmail.com>, Valentin Hervieu <valentin@hervieu.me>, Jussi Saarivirta <jusasi@gmail.com>, Angelin Sirbu <angelin.sirbu@gmail.com> - 
  https://github.com/angular-slider/angularjs-slider - 
- 2018-05-21 */
+ 2018-05-22 */
 /*jslint unparam: true */
 /*global angular: false, console: false, define, module */
 ;(function(root, factory) {
@@ -1333,6 +1333,10 @@
             nearHandlePos = newPos - labelRzsd / 2 + this.handleHalfDim,
             endOfBarPos = this.barDimension - labelRzsd
 
+          if (labelName === 'minLab') nearHandlePos -= 21;
+          if (labelName === 'maxLab') nearHandlePos += 13;
+          if (labelName === 'indLab') nearHandlePos -= 7;
+
           if (!this.options.boundPointerLabels) return nearHandlePos
 
           if (
@@ -1682,6 +1686,9 @@
               this.minLab.rzsp + this.minLab.rzsd + 10 >= this.maxLab.rzsp
           }
 
+          //test
+          isLabelOverlap = false;
+
           if (isLabelOverlap) {
             var lowTr = this.getDisplayValue(this.lowValue, 'model'),
               highTr = this.getDisplayValue(this.highValue, 'high'),
@@ -1713,6 +1720,7 @@
             this.hideEl(this.maxLab)
             this.showEl(this.cmbLab)
           } else {
+            console.log('hitting cmbLabel hide')
             this.cmbLabelShown = false
             this.updateHighHandle(this.valueToPosition(this.highValue))
             this.updateLowHandle(this.valueToPosition(this.lowValue))
@@ -2471,12 +2479,18 @@
             action = actions[key]
           // only fire once every 100 miliseconds so as not to overwhelm the
           // component listening to these events
-          if (action == null || this.tracking === '' || (this.lastKeypressTimestamp && (keyPressTimestamp - this.lastKeypressTimestamp < 100))) return;
+          if (
+            action == null ||
+            this.tracking === '' ||
+            (this.lastKeypressTimestamp &&
+              keyPressTimestamp - this.lastKeypressTimestamp < 100)
+          )
+            return
           event.preventDefault()
-          this.lastKeypressTimestamp = keyPressTimestamp;
+          this.lastKeypressTimestamp = keyPressTimestamp
 
           if (action === 'space') {
-            this.scope.$emit('spaceKeyPressed');
+            this.scope.$emit('spaceKeyPressed')
             // return so that none of the other stuff happens -> causes bugs
             return
           }
