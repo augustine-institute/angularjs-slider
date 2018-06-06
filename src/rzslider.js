@@ -1157,7 +1157,6 @@
         calcViewDimensions: function() {
           var handleWidth = this.getDimension(this.minH)
           var indHandleWidth = this.getDimension(this.indH)
-          console.log('calcViewDimensions() handleWidth:', handleWidth)
 
           this.handleHalfDim = handleWidth / 2
           this.barDimension = this.getDimension(this.fullBar)
@@ -1360,16 +1359,11 @@
          * @returns {undefined}
          */
         updateLowHandle: function(newPos) {
-          // // console.log('updateLowHandle() newPos: ', newPos)
-
-          // // 'snap' low handle to indicator handle
-          // if (
-          //   this.tracking === 'lowValue' &&
-          //   Math.abs(newPos - this.indH.rzsp) < 25
-          // ) {
-          //   this.setPosition(this.minH, this.indH.rzsp)
-          //   return
-          // }
+          if (this.lowValue >= this.indicatorValue) {
+            this.indicatorValue = this.lowValue
+            this.applyIndValue()
+            this.updateIndHandle(newPos)
+          }
 
           this.setPosition(this.minH, newPos)
           this.translateFn(this.lowValue, this.minLab, 'model')
@@ -1397,14 +1391,11 @@
          * @returns {undefined}
          */
         updateHighHandle: function(newPos) {
-          // // 'snap' high handle to indicator handle
-          // if (
-          //   this.tracking === 'highValue' &&
-          //   Math.abs(newPos - this.indH.rzsp) < 25
-          // ) {
-          //   this.setPosition(this.maxH, this.indH.rzsp)
-          //   return
-          // }
+          if (this.highValue <= this.indicatorValue) {
+            this.indicatorValue = this.highValue
+            this.applyIndValue()
+            this.updateIndHandle(newPos)
+          }
 
           this.setPosition(this.maxH, newPos)
           this.translateFn(this.highValue, this.maxLab, 'high')
@@ -1724,7 +1715,6 @@
             this.hideEl(this.maxLab)
             this.showEl(this.cmbLab)
           } else {
-            console.log('hitting cmbLabel hide')
             this.cmbLabelShown = false
             this.updateHighHandle(this.valueToPosition(this.highValue))
             this.updateLowHandle(this.valueToPosition(this.lowValue))
